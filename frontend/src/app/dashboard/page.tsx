@@ -40,12 +40,13 @@ export default function DashboardPage() {
         return;
       }
 
-      // Add mock progress for visual flair
-      const enhancedData = data.map((s: any) => ({
-        ...s,
+      // Standardize data immediately
+      const normalizedData = data.map((s: any) => ({
+        ...normalizeStudentData(s),
+        // Overwrite random progress for now as per previous logic
         progress: Math.floor(Math.random() * 60) + 20
       }));
-      setStudents(enhancedData);
+      setStudents(normalizedData);
     } catch (e) {
       console.error(e);
       setStudents([]);
@@ -58,7 +59,7 @@ export default function DashboardPage() {
     setAnalyzing(true);
     try {
       // For demo, generate for the first student if available
-      const studentName = students.length > 0 ? students[0].학생이름 : "관리자";
+      const studentName = students.length > 0 ? students[0].student_name : "관리자";
       const res = await fetch("/api/v1/analytics/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -142,8 +143,7 @@ export default function DashboardPage() {
                   </div>
                 ))
               ) : (
-                students.map((rawStudent, idx) => {
-                  const student = normalizeStudentData(rawStudent);
+                students.map((student, idx) => {
                   return (
                     <div key={idx} className="group glass-interactive p-8 rounded-[40px] relative overflow-hidden animate-fade-in" style={{animationDelay: `${idx * 50}ms`}}>
                       <div className="flex justify-between items-start mb-8">
