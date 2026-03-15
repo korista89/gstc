@@ -109,15 +109,14 @@ class SheetsService:
 
     def get_spreadsheet(self):
         client = self.get_client()
-        if not client or not settings.SHEET_URL:
-            return None
-        for attempt in range(3):
-            try:
-                return client.open_by_url(settings.SHEET_URL)
-            except Exception as e:
-                print(f"Error opening spreadsheet (attempt {attempt+1}): {e}")
-                time.sleep(1)
-        return None
+        if not client:
+            raise Exception("Google Sheets 클라이언트 초기화 실패 (자격 증명 확인 필요)")
+        if not settings.SHEET_URL:
+            raise Exception("스프레드시트 URL이 설정되지 않았습니다 (settings.SHEET_URL 확인 필요)")
+        try:
+            return client.open_by_url(settings.SHEET_URL)
+        except Exception as e:
+            raise Exception(f"스프레드시트 열기 실패: {str(e)}")
 
     def safe_get_all_records(self, ws) -> List[Dict[str, Any]]:
         try:
@@ -190,19 +189,25 @@ class SheetsService:
         try:
             self._cache.pop("subjects", None) # Invalidate cache
             sh = self.get_spreadsheet()
-            if not sh: return False
             
             clean_role = str(role).strip()
             
             try:
                 ws = sh.worksheet("Users")
-            except:
-                ws = sh.add_worksheet(title="Users", rows=100, cols=5)
-                ws.append_row(["Role", "Subjects", "ID", "Name"])
-                time.sleep(1)
+            except Exception as e:
+                try:
+                    ws = sh.add_worksheet(title="Users", rows=100, cols=5)
+                    ws.append_row(["Role", "Subjects", "ID", "Name"])
+                    time.sleep(1)
+                except Exception as e2:
+                    raise Exception(f"Users 시트 생성 실패: {str(e2)}")
             
             # Optimize: Get all values in one call
-            all_values = ws.get_all_values()
+            try:
+                all_values = ws.get_all_values()
+            except Exception as e:
+                raise Exception(f"시트 데이터 읽기 실패: {str(e)}")
+
             if not all_values:
                 headers = ["Role", "Subjects", "ID", "Name"]
                 ws.append_row(headers)
@@ -227,17 +232,19 @@ class SheetsService:
 
             subject_str = ",".join(subjects)
             if row_idx != -1:
-                return self.safe_update_cell(ws, row_idx, sub_col, subject_str)
+                success = self.safe_update_cell(ws, row_idx, sub_col, subject_str)
+                if not success: raise Exception("기존 사용자 정보 업데이트 실패")
+                return True
             else:
                 # Add new row for this role
-                # Ensure we have enough columns for the new row
                 new_row = [clean_role, subject_str, clean_role, "Unknown"]
-                return self.safe_append_row(ws, new_row)
+                success = self.safe_append_row(ws, new_row)
+                if not success: raise Exception("신규 사용자 정보 추가 실패")
+                return True
                 
-            return True
         except Exception as e:
             print(f"Error saving user subjects: {e}")
-            return False
+            raise e
 
     def get_user_subjects(self, role: str) -> List[str]:
         try:

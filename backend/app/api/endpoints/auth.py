@@ -34,8 +34,8 @@ from app.services.sheets import sheets_service
 
 @router.post("/setup-subjects")
 def setup_subjects(req: SubjectSetupRequest):
-    success = sheets_service.save_user_subjects(req.role, req.selected_subjects)
-    if success:
+    try:
+        success = sheets_service.save_user_subjects(req.role, req.selected_subjects)
         return {"message": "Subjects saved successfully"}
-    else:
-        raise HTTPException(status_code=500, detail="데이터 저장 중 오류가 발생했습니다.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
