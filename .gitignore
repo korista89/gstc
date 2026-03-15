@@ -1,0 +1,1 @@
+node_modules/\n.next/\n.vercel\n*.json\n!package.json\n!tsconfig.json\n!next.config.js\nvenv/\n__pycache__/\n*.pyc\n.env\nservice_account.json
