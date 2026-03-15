@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import GlobalNav from "@/components/GlobalNav";
 import { 
   Sparkles, 
@@ -30,6 +30,24 @@ export default function CurriculumRebuilder() {
   const [userRole, setUserRole] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const fetchStandards = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/v1/curriculum/standards/by-subject/${encodeURIComponent(selectedSubject)}`);
+      const data = await res.json();
+      setStandards(data || []);
+    } catch (e) { console.error(e); }
+  }, [selectedSubject]);
+
+  const loadExistingPlan = useCallback(async (role: string, subject: string) => {
+    try {
+      const res = await fetch(`/api/v1/curriculum/get-plan?role=${encodeURIComponent(role)}&subject=${encodeURIComponent(subject)}`);
+      const data = await res.json();
+      if (data && Object.keys(data).length > 0) {
+        setMonthlyPlan(data);
+      }
+    } catch (e) { console.error(e); }
+  }, []);
+
   useEffect(() => {
     const role = localStorage.getItem("gstc_role") || "관리자 선생님";
     setUserRole(role);
@@ -40,25 +58,7 @@ export default function CurriculumRebuilder() {
 
     fetchStandards();
     loadExistingPlan(role, selectedSubject);
-  }, [selectedSubject]);
-
-  const fetchStandards = async () => {
-    try {
-      const res = await fetch(`/api/v1/curriculum/standards/by-subject/${encodeURIComponent(selectedSubject)}`);
-      const data = await res.json();
-      setStandards(data || []);
-    } catch (e) { console.error(e); }
-  };
-
-  const loadExistingPlan = async (role: string, subject: string) => {
-    try {
-      const res = await fetch(`/api/v1/curriculum/get-plan?role=${encodeURIComponent(role)}&subject=${encodeURIComponent(subject)}`);
-      const data = await res.json();
-      if (data && Object.keys(data).length > 0) {
-        setMonthlyPlan(data);
-      }
-    } catch (e) { console.error(e); }
-  };
+  }, [selectedSubject, fetchStandards, loadExistingPlan]);
 
   const handleAiSuggest = async () => {
     setLoading(true);

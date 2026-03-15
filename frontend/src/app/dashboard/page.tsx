@@ -1,24 +1,7 @@
-"use client";
+import { normalizeStudentData, Student as InternalStudent } from "@/lib/student-data";
 
-import { useState, useEffect } from "react";
-import GlobalNav from "@/components/GlobalNav";
-import { 
-  Users, 
-  TrendingUp, 
-  CheckCircle2, 
-  Clock, 
-  AlertCircle,
-  Calendar,
-  ArrowUpRight,
-  GraduationCap
-} from "lucide-react";
-
-interface Student {
-  학생이름: string;
-  학급명: string;
-  담당과목: string[];
-  progress?: number;
-}
+// Keep existing Student interface for internal use if necessary, or just use the imported one
+type Student = InternalStudent;
 
 export default function DashboardPage() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -138,10 +121,6 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-import { normalizeStudentData, Student } from "@/lib/student-data";
-
-// ... (stats definition remains same)
-
               {loading ? (
                 Array(6).fill(0).map((_, i) => (
                   <div key={i} className="h-48 glass rounded-[40px] relative overflow-hidden">
@@ -272,7 +251,7 @@ import { normalizeStudentData, Student } from "@/lib/student-data";
                   <GraduationCap className="w-4 h-4" /> 종합 소견: {report.student_name}
                 </h4>
                 <p className="text-lg font-medium text-slate-200 leading-relaxed italic">
-                  &quot;{report.summary}&quot;
+                  &quot;{report.summary.replace(/"/g, '&quot;')}&quot;
                 </p>
               </div>
 
