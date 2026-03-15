@@ -10,6 +10,16 @@ class SheetsService:
         self._client = None
         self._cache = {}
         self.CACHE_TTL = 300  # 5 minutes cache
+        # Define expected schema and their aliases
+        self.SCHEMA_ALIASES = {
+            "student_name": ["학생이름", "학생명", "이름", "Name", "Student Name", "학생"],
+            "class_name": ["학급명", "학계", "반", "Class", "Grade", "학급"],
+            "subject": ["과목", "담당과목", "Subject", "Area"],
+            "code": ["코드", "성취기준코드", "기준코드", "Code"],
+            "content": ["내용", "성취기준", "성취기준내용", "Content"],
+            "role": ["Role", "역할", "구분", "ID"],
+            "subjects": ["Subjects", "선택과목", "담당과목목록"]
+        }
 
     def _get_from_cache(self, key: str):
         if key in self._cache:
@@ -134,6 +144,46 @@ class SheetsService:
                 records.append(record)
             return records
 
+    def _map_records_to_schema(self, records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Maps varying record keys to a standardized internal schema."""
+        if not records:
+            return []
+            
+        mapped_records = []
+        for rec in records:
+            mapped = {}
+            for schema_key, aliases in self.SCHEMA_ALIASES.items():
+                # Find which alias exists in the record
+                val = None
+                for alias in aliases:
+                    if alias in rec:
+                        val = rec[alias]
+                        break
+                mapped[schema_key] = val
+            mapped_records.append(mapped)
+        return mapped_records
+
+    def get_system_status(self) -> Dict[str, Any]:
+        status = {
+            "google_creds": False,
+            "spreadsheet_connection": False,
+            "env_vars": {
+                "GOOGLE_SERVICE_ACCOUNT_JSON": bool(os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')),
+                "SHEET_URL": bool(settings.SHEET_URL)
+            },
+            "error": None
+        }
+        try:
+            client = self.get_client()
+            if client:
+                status["google_creds"] = True
+                sh = client.open_by_url(settings.SHEET_URL)
+                if sh:
+                    status["spreadsheet_connection"] = True
+        except Exception as e:
+            status["error"] = str(e)
+        return status
+
     def fetch_students(self) -> List[Dict[str, Any]]:
         cached = self._get_from_cache("students")
         if cached: return cached
@@ -141,14 +191,32 @@ class SheetsService:
         try:
             sh = self.get_spreadsheet()
             if not sh: return []
-            try:
-                ws = sh.worksheet(settings.STUDENT_STATUS_SHEET_NAME)
-            except:
-                ws = sh.worksheet("학생명단")
+            
+            # Try multiple sheet names
+            ws = None
+            for name in [settings.STUDENT_STATUS_SHEET_NAME, "학생명단", "Student_Status", "Students"]:
+                try:
+                    ws = sh.worksheet(name)
+                    break
+                except: continue
+                
+            if not ws:
+                print("Could not find student status worksheet")
+                return []
             
             records = self.safe_get_all_records(ws)
-            self._set_to_cache("students", records)
-            return records
+            # Apply smart mapping
+            mapped = self._map_records_to_schema(records)
+            
+            # Additional logic for frontend backward compatibility if needed
+            # (Keeping original names in result so existing frontend doesn't break immediately)
+            for i, m in enumerate(mapped):
+                m["학생이름"] = m.get("student_name")
+                m["학급명"] = m.get("class_name")
+                m["담당과목"] = m.get("subject").split(",") if m.get("subject") and isinstance(m.get("subject"), str) else []
+
+            self._set_to_cache("students", mapped)
+            return mapped
         except Exception as e:
             print(f"Error fetching students: {e}")
             return []
@@ -157,12 +225,32 @@ class SheetsService:
         cached = self._get_from_cache("curriculum")
         if cached: return cached
         
-        sh = self.get_spreadsheet()
-        if not sh: return []
-        ws = sh.worksheet(settings.CURRICULUM_SHEET_NAME)
-        records = self.safe_get_all_records(ws)
-        self._set_to_cache("curriculum", records)
-        return records
+        try:
+            sh = self.get_spreadsheet()
+            if not sh: return []
+            
+            ws = None
+            for name in [settings.CURRICULUM_SHEET_NAME, "교육과정", "Curriculum_Standards", "Curriculum"]:
+                try:
+                    ws = sh.worksheet(name)
+                    break
+                except: continue
+            
+            if not ws: return []
+            
+            records = self.safe_get_all_records(ws)
+            mapped = self._map_records_to_schema(records)
+            
+            # Rename for frontend compatibility
+            for m in mapped:
+                m["코드"] = m.get("code")
+                m["내용"] = m.get("content")
+
+            self._set_to_cache("curriculum", mapped)
+            return mapped
+        except Exception as e:
+            print(f"Error fetching curriculum: {e}")
+            return []
 
     def save_curriculum_plan(self, role: str, subject: str, plan_data: Dict[str, List[str]]):
         self._cache.pop("plans", None)
