@@ -23,13 +23,33 @@ export default function SetupPage() {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selectedSubjects.length === 0) {
       alert("최소 하나 이상의 과목을 선택해주세요.");
       return;
     }
-    localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
-    router.push("/dashboard");
+    const role = localStorage.getItem("gstc_role");
+    
+    try {
+      const res = await fetch("/api/v1/auth/setup-subjects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: role,
+          selected_subjects: selectedSubjects
+        })
+      });
+      
+      if (res.ok) {
+        localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
+        router.push("/dashboard");
+      } else {
+        alert("과목 저장에 실패했습니다. (서버 오류)");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("네트워크 오류가 발생했습니다.");
+    }
   };
 
   return (
