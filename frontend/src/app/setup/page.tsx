@@ -47,17 +47,26 @@ export default function SetupPage() {
         })
       });
       
-      const data = await res.json();
-      
       if (res.ok) {
+        const data = await res.json();
         localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
         router.push("/dashboard");
       } else {
-        alert(`과목 저장에 실패했습니다: ${data.detail || "서버 오류"}`);
+        const text = await res.text();
+        let errorMessage = "서버 오류가 발생했습니다.";
+        try {
+          const data = JSON.parse(text);
+          errorMessage = data.detail || errorMessage;
+        } catch (e) {
+          if (res.status === 504) errorMessage = "서버 응답 시간이 초과되었습니다 (Timeout).";
+          else if (res.status === 500) errorMessage = "내부 서버 오류가 발생했습니다 (500).";
+          console.error("Non-json error response:", text);
+        }
+        alert(`과목 저장에 실패했습니다: ${errorMessage}`);
       }
     } catch (e) {
-      console.error(e);
-      alert("네트워크 오류가 발생했습니다. 인터넷 연결을 확인해 주세요.");
+      console.error("Fetch error:", e);
+      alert("네트워크 연결에 실패했습니다. 서버가 오프라인이거나 연결이 불안정합니다.");
     } finally {
       setIsSaving(false);
     }

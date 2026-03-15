@@ -68,41 +68,41 @@ class SheetsService:
             return None
 
     def safe_append_row(self, ws, row: List[Any]) -> bool:
-        for attempt in range(5):
+        for attempt in range(3):
             try:
                 ws.append_row(row)
                 return True
             except Exception as e:
-                wait_time = (2 ** attempt) + 1
+                wait_time = attempt + 1
                 print(f"Error appending row (attempt {attempt+1}, waiting {wait_time}s): {e}")
                 time.sleep(wait_time)
         return False
 
     def safe_append_rows(self, ws, rows: List[List[Any]]) -> bool:
-        for attempt in range(5):
+        for attempt in range(3):
             try:
                 ws.append_rows(rows)
                 return True
             except Exception as e:
-                wait_time = (2 ** attempt) + 1
+                wait_time = attempt + 1
                 print(f"Error appending rows (attempt {attempt+1}, waiting {wait_time}s): {e}")
                 time.sleep(wait_time)
         return False
 
     def safe_update_cell(self, ws, row: int, col: int, value: Any) -> bool:
-        for attempt in range(5):
+        for attempt in range(3):
             try:
                 # Ensure sheet is big enough
                 if ws.row_count < row or ws.col_count < col:
                     needed_rows = max(row, ws.row_count)
                     needed_cols = max(col, ws.col_count)
                     ws.resize(rows=needed_rows, cols=needed_cols)
-                    time.sleep(1) # Wait for resize to propogate
+                    time.sleep(0.5) 
                 
                 ws.update_cell(row, col, value)
                 return True
             except Exception as e:
-                wait_time = (2 ** attempt) + 1
+                wait_time = attempt + 1
                 print(f"Error updating cell {row},{col} (attempt {attempt+1}, waiting {wait_time}s): {e}")
                 time.sleep(wait_time)
         return False
@@ -201,8 +201,15 @@ class SheetsService:
                 ws.append_row(["Role", "Subjects", "ID", "Name"])
                 time.sleep(1)
             
-            records = self.safe_get_all_records(ws)
-            headers = ws.row_values(1)
+            # Optimize: Get all values in one call
+            all_values = ws.get_all_values()
+            if not all_values:
+                headers = ["Role", "Subjects", "ID", "Name"]
+                ws.append_row(headers)
+                all_values = [headers]
+            
+            headers = all_values[0]
+            records = [dict(zip(headers, r)) for r in all_values[1:]]
             
             # Find the row for this role
             row_idx = -1
@@ -218,11 +225,13 @@ class SheetsService:
             else:
                 sub_col = headers.index("Subjects") + 1
 
+            subject_str = ",".join(subjects)
             if row_idx != -1:
-                return self.safe_update_cell(ws, row_idx, sub_col, ",".join(subjects))
+                return self.safe_update_cell(ws, row_idx, sub_col, subject_str)
             else:
                 # Add new row for this role
-                new_row = [clean_role, ",".join(subjects), clean_role, "Unknown"]
+                # Ensure we have enough columns for the new row
+                new_row = [clean_role, subject_str, clean_role, "Unknown"]
                 return self.safe_append_row(ws, new_row)
                 
             return True
