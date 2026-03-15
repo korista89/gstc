@@ -1,0 +1,377 @@
+.container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding-bottom: 4rem;
+}
+
+.mainContent {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* Header Section */
+.headerSection {
+  margin-bottom: 2rem;
+  padding-top: 1rem;
+}
+
+.pageTitle {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.03em;
+}
+
+.pageSubtitle {
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Control Panel */
+.controlPanel {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .controlPanel {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.tabGroup {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem; /* For scrollbar */
+}
+
+@media (min-width: 768px) {
+  .tabGroup {
+    padding-bottom: 0;
+  }
+}
+
+.tabBtn {
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: #64748b;
+}
+
+.tabBtn:hover {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+.tabActive {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+  box-shadow: inset 0 0 0 1px #3b82f6;
+}
+
+.actionGroup {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.primaryBtn {
+  padding: 0.75rem 1.5rem;
+  background-color: #1d4ed8;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.2);
+}
+
+.primaryBtn:hover {
+  background-color: #1e40af;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(29, 78, 216, 0.3);
+}
+
+/* Data Grid Container */
+.gridContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .gridContainer {
+    grid-template-columns: 350px 1fr;
+  }
+}
+
+/* Student List Panel */
+.studentPanel {
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 250px);
+  overflow: hidden;
+}
+
+.panelHeader {
+  padding: 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panelTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.studentList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.studentItem {
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.studentItem:hover {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.studentActive {
+  background-color: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.studentAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #10b981;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.studentInfo {
+  flex: 1;
+}
+
+.studentName {
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+.studentMeta {
+  font-size: 0.8rem;
+  color: #64748b;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.badge {
+  padding: 0.15rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.badgeTier1 { background-color: #dbeafe; color: #1e40af; }
+.badgeTier2 { background-color: #fef08a; color: #854d0e; }
+.badgeTier3 { background-color: #ffedd5; color: #9a3412; }
+
+/* Main Detail/Input Area */
+.detailArea {
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 250px);
+}
+
+.detailHeader {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.detailTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+.detailSubtitle {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.detailContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background-color: #fafaf9;
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1rem;
+  color: #cbd5e1;
+}
+
+.emptyTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+/* Input Form Styles */
+.formGroup {
+  margin-bottom: 1.5rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.formLabel {
+  display: block;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 0.75rem;
+}
+
+.formSelect, .formInput, .formTextarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  color: #1e293b;
+  transition: border-color 0.2s;
+}
+
+.formSelect:focus, .formInput:focus, .formTextarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.formTextarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.radioGroup {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.radioLabel:hover {
+  background-color: #f8fafc;
+}
+
+.radioInput {
+  accent-color: #10b981;
+}
+
+.submitAction {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.saveBtn {
+  padding: 0.75rem 2rem;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+}
+
+.saveBtn:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+}

@@ -1,0 +1,145 @@
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.navContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 4.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logoGroup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.logoGroup:hover {
+  opacity: 0.8;
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+}
+
+.logoTitle {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #1e3a8a;
+  letter-spacing: -0.02em;
+  margin-bottom: -4px;
+}
+
+.logoSubtitle {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #475569;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.navItem:hover {
+  background-color: #f1f5f9;
+  color: #1e3a8a;
+}
+
+.navItemActive {
+  background-color: #eff6ff;
+  color: #1e3a8a;
+}
+
+.icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.divider {
+  height: 2rem;
+  width: 1px;
+  background-color: #e2e8f0;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.userDetails {
+  text-align: right;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .userDetails {
+    display: block;
+  }
+}
+
+.userName {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.userRole {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #3b82f6;
+  margin: 0;
+}
+
+.avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.85rem;
+  color: #1e3a8a;
+}
