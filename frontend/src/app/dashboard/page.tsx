@@ -36,14 +36,22 @@ export default function DashboardPage() {
     try {
       const res = await fetch("/api/v1/assessment/students");
       const data = await res.json();
+      
+      if (!Array.isArray(data)) {
+        console.error("Data is not an array:", data);
+        setStudents([]);
+        return;
+      }
+
       // Add mock progress for visual flair
       const enhancedData = data.map((s: any) => ({
         ...s,
         progress: Math.floor(Math.random() * 60) + 20
       }));
-      setStudents(enhancedData || []);
+      setStudents(enhancedData);
     } catch (e) {
       console.error(e);
+      setStudents([]);
     } finally {
       setLoading(false);
     }
@@ -140,11 +148,11 @@ export default function DashboardPage() {
                     <div className="flex justify-between items-start mb-6">
                       <div className="flex gap-4 items-center">
                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center border border-white/5 font-black text-xl text-blue-500">
-                          {student.학생이름[0]}
+                          {student.학생이름 ? student.학생이름[0] : "?"}
                         </div>
                         <div>
-                          <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">{student.학급명}</p>
-                          <h3 className="text-2xl font-black text-white">{student.학생이름}</h3>
+                          <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">{student.학급명 || "학급 미지정"}</p>
+                          <h3 className="text-2xl font-black text-white">{student.학생이름 || "이름 없음"}</h3>
                         </div>
                       </div>
                       <div className="text-right">
