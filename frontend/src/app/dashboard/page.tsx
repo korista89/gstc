@@ -1,3 +1,17 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import GlobalNav from "@/components/GlobalNav";
+import { 
+  Users, 
+  TrendingUp, 
+  CheckCircle2, 
+  Clock, 
+  AlertCircle,
+  Calendar,
+  ArrowUpRight,
+  GraduationCap
+} from "lucide-react";
 import { normalizeStudentData, Student as InternalStudent } from "@/lib/student-data";
 
 // Keep existing Student interface for internal use if necessary, or just use the imported one
