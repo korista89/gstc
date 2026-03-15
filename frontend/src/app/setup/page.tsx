@@ -53,58 +53,44 @@ export default function SetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white p-8 flex flex-col items-center justify-center">
-      {/* Background elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[20%] left-[-10%] w-[600px] h-[600px] bg-emerald-600/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px]" />
-      </div>
+    <div className="min-h-screen p-8 flex flex-col items-center justify-center">
+      <div className="premium-bg" />
 
-      <div className="relative z-10 bg-slate-900/40 backdrop-blur-2xl p-10 md:p-16 rounded-[40px] max-w-4xl w-full border border-white/5 shadow-[0_32px_64px_rgba(0,0,0,0.4)] animate-in fade-in zoom-in-95 duration-500">
-        <header className="mb-12 flex justify-between items-start">
+      <div className="glass-container" style={{ padding: '60px', width: '100%', maxWidth: '900px' }}>
+        <header className="mb-12" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <span className="text-emerald-400 text-xs font-black uppercase tracking-[0.3em] mb-3 block">Step 02. Preference</span>
-            <h2 className="text-4xl font-black mb-4 tracking-tight">과목 선택</h2>
-            <p className="text-slate-400 font-medium">담당하시는 수업 과목을 모두 선택해 주세요. <br className="hidden md:block"/>다중 선택이 가능합니다.</p>
+            <span className="category-title">Step 02. Preference</span>
+            <h2 style={{ fontSize: '48px', fontWeight: 900, marginBottom: '16px', letterSpacing: '-0.02em' }}>과목 선택</h2>
+            <p style={{ color: '#94a3b8', fontWeight: 500, lineHeight: 1.6 }}>담당하시는 수업 과목을 모두 선택해 주세요. <br />다중 선택이 가능합니다.</p>
           </div>
-          <div className="bg-emerald-500/10 border border-emerald-500/20 px-6 py-4 rounded-2xl text-center">
-            <p className="text-[10px] font-black text-emerald-500 uppercase mb-1">Selected</p>
-            <p className="text-2xl font-black text-white">{selectedSubjects.length}</p>
+          <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.1)', padding: '24px', borderRadius: '24px', textAlign: 'center', minWidth: '100px' }}>
+            <p style={{ fontSize: '10px', fontWeight: 900, color: '#10b981', textTransform: 'uppercase', marginBottom: '4px' }}>Selected</p>
+            <p style={{ fontSize: '32px', fontWeight: 900 }}>{selectedSubjects.length}</p>
           </div>
         </header>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-12">
+        <div className="subject-grid" style={{ marginBottom: '48px' }}>
           {subjects.map(sub => (
             <button
               key={sub}
               type="button"
               onClick={() => toggleSubject(sub)}
-              className={`group relative p-6 rounded-[24px] border transition-all duration-300 overflow-hidden ${
-                selectedSubjects.includes(sub)
-                  ? "bg-emerald-500/20 border-emerald-500/50 shadow-[0_10px_30px_rgba(16,185,129,0.2)] scale-[1.02]"
-                  : "bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10"
-              }`}
+              className={`subject-card ${selectedSubjects.includes(sub) ? "active" : ""}`}
             >
-              <span className={`relative z-10 font-bold transition-colors ${
-                selectedSubjects.includes(sub) ? "text-emerald-300" : "text-slate-400 group-hover:text-slate-200"
-              }`}>
-                {sub}
-              </span>
-              {selectedSubjects.includes(sub) && (
-                <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              )}
+              {sub}
             </button>
           ))}
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <button
             onClick={handleSave}
-            className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[20px] font-black text-lg tracking-widest uppercase hover:from-blue-500 hover:to-indigo-500 transition-all shadow-[0_15px_30px_rgba(37,99,235,0.25)] active:scale-[0.98]"
+            className="premium-button"
+            style={{ width: '100%', fontSize: '18px', letterSpacing: '0.1em' }}
           >
             CONFIRM & START
           </button>
-          <p className="text-center text-slate-500 text-xs font-medium">설정 정보는 언제든지 대시보드에서 수정하실 수 있습니다.</p>
+          <p style={{ textAlign: 'center', color: '#64748b', fontSize: '12px', fontWeight: 500 }}>설제 정보는 언제든지 대시보드에서 수정하실 수 있습니다.</p>
         </div>
       </div>
     </div>
