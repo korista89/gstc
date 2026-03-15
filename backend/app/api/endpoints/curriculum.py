@@ -1,50 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from app.services.sheets import sheets_service
-from app.services.ai_curriculum import ai_curriculum_service
-from typing import List, Dict, Any
+from pydantic import BaseModel
+from typing import List, Dict
 
 router = APIRouter()
-
-@router.get("/standards")
-def get_standards():
-    try:
-        standards = sheets_service.fetch_curriculum()
-        return standards
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/subjects")
-def get_subjects():
-    try:
-        standards = sheets_service.fetch_curriculum()
-        # Extract unique subjects
-        subjects = sorted(list(set(s.get("subject", "") for s in standards if s.get("subject"))))
-        return subjects
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/standards/by-subject/{subject}")
-def get_standards_by_subject(subject: str):
-    try:
-        standards = sheets_service.fetch_curriculum()
-        filtered = [s for s in standards if s.get("subject") == subject]
-        return filtered
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/suggest-plan")
-def suggest_plan(subject: str):
-    try:
-        standards = [s for s in sheets_service.fetch_curriculum() if s.get("subject") == subject]
-        if not standards:
-            return {"message": "No standards found for subject"}
-        
-        plan = ai_curriculum_service.suggest_monthly_plan(standards)
-        return plan
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-from pydantic import BaseModel
 
 class PlanSaveRequest(BaseModel):
     role: str
