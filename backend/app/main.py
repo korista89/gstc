@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Fix path for Vercel: allow 'import app' to work
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 if parent_dir not in sys.path:
@@ -9,12 +8,10 @@ if parent_dir not in sys.path:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 try:
     from app.core.config import settings
-except ImportError as e:
-    # Failback if path fix didn't work as expected
-    print(f"ImportError for settings: {e}")
-    # Try relative import as last resort
+except ImportError:
     from core.config import settings
 
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -28,20 +25,17 @@ app.add_middleware(
 )
 
 try:
-    from app.api.endpoints import auth, curriculum, assessment, analytics, system
-except ImportError as e:
-    print(f"ImportError for endpoints: {e}")
-    from api.endpoints import auth, curriculum, assessment, analytics, system
+    from app.api.endpoints import auth, curriculum, assessment
+except ImportError:
+    from api.endpoints import auth, curriculum, assessment
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(curriculum.router, prefix="/api/v1/curriculum", tags=["curriculum"])
 app.include_router(assessment.router, prefix="/api/v1/assessment", tags=["assessment"])
-app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
-app.include_router(system.router, prefix="/api/v1/system", tags=["system"])
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to GSTC API", "status": "active"}
+    return {"message": "GSTC API", "status": "active"}
 
 @app.get("/api/health")
 def health_check():
