@@ -3,19 +3,16 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { gradeSubjects } from "@/data/config";
+import { Sparkles, CheckCircle2, BookOpen, ChevronRight, Layout } from "lucide-react";
 
 function extractGrade(role: string): string {
-  // "초1-1 담임" → "초1", "중2-2 부담임" → "중2", "고3-1 담임" → "고3"
-  // "중교과전담" → "중1", "고교과전담" → "고1", "전교과전담" → "고3"
-  // "유난초 담임" → "초1"
-  // "진로전담", "관리자" etc → "고1" (default: full range)
   const m = role.match(/^(초|중|고)(\d)/);
   if (m) return `${m[1]}${m[2]}`;
   if (role.startsWith("유")) return "초1";
   if (role.startsWith("전")) return "고3";
   if (role.includes("중")) return "중1";
   if (role.includes("고")) return "고1";
-  return "고1"; // default: widest range
+  return "고1";
 }
 
 export default function SetupPage() {
@@ -24,14 +21,16 @@ export default function SetupPage() {
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
   const [grade, setGrade] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [role, setRole] = useState("");
 
   useEffect(() => {
-    const role = localStorage.getItem("gstc_role");
-    if (!role) {
+    const r = localStorage.getItem("gstc_role");
+    if (!r) {
       router.push("/");
       return;
     }
-    const g = extractGrade(role);
+    setRole(r);
+    const g = extractGrade(r);
     setGrade(g);
     localStorage.setItem("gstc_grade", g);
     setAvailableSubjects(gradeSubjects[g] || []);
@@ -46,16 +45,8 @@ export default function SetupPage() {
   };
 
   const handleSave = async () => {
-    if (selectedSubjects.length === 0) {
-      alert("최소 하나 이상의 과목을 선택해주세요.");
-      return;
-    }
-    const role = localStorage.getItem("gstc_role");
-    if (!role) {
-      router.push("/");
-      return;
-    }
-
+    if (selectedSubjects.length === 0) return;
+    
     setIsSaving(true);
     try {
       const res = await fetch("/api/v1/auth/setup-subjects", {
@@ -68,13 +59,10 @@ export default function SetupPage() {
         localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
         router.push("/main");
       } else {
-        alert("과목 저장에 실패했습니다. 서버 연결을 확인해주세요.");
-        // Save locally anyway so user can proceed
         localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
         router.push("/main");
       }
     } catch {
-      // Offline mode: save locally and proceed
       localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
       router.push("/main");
     } finally {
@@ -83,41 +71,99 @@ export default function SetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 w-full max-w-lg">
-        <div className="mb-6">
-          <p className="text-xs text-slate-500 uppercase tracking-widest mb-1">
-            과목 설정
-          </p>
-          <h2 className="text-2xl font-bold mb-1">수업 과목 선택</h2>
-          <p className="text-slate-400 text-sm">
-            {grade} 학년 기준 · 최대 5개 선택 가능 ({selectedSubjects.length}/5)
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Decorative Elements */}
+      <div className="pbst-blob bg-blue-600 w-[600px] h-[600px] -bottom-48 -left-48 opacity-10" />
+      <div className="pbst-blob bg-emerald-600 w-[400px] h-[400px] -top-48 -right-48 opacity-10" />
 
-        <div className="grid grid-cols-3 gap-2 mb-6">
-          {availableSubjects.map((sub) => (
-            <button
-              key={sub}
-              onClick={() => toggleSubject(sub)}
-              className={`py-3 px-2 rounded-xl text-sm font-semibold transition-all border ${
-                selectedSubjects.includes(sub)
-                  ? "bg-emerald-600/20 border-emerald-500 text-emerald-300"
-                  : "bg-slate-700/50 border-slate-600/50 text-slate-400 hover:bg-slate-700 hover:text-slate-300"
-              }`}
-            >
-              {sub}
-            </button>
-          ))}
-        </div>
+      <div className="w-full max-w-2xl relative z-10 animate-pbst-scale-up">
+        <div className="glass-card overflow-hidden shadow-2xl">
+          {/* Progress Header */}
+          <div className="bg-gradient-to-r from-blue-600/20 via-indigo-600/10 to-transparent p-10 border-b border-slate-700/50">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <Layout className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="pbst-label text-blue-400">Step 2: Configuration</p>
+                <h1 className="text-3xl font-black tracking-tight">{role} 워크스페이스 설정</h1>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-700/50">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span className="text-sm font-bold text-slate-300">{grade} 교육과정 기준</span>
+              </div>
+              <div className="flex-1 h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-700 ease-out"
+                  style={{ width: `${(selectedSubjects.length / 5) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
+                {selectedSubjects.length} / 5 Selected
+              </span>
+            </div>
+          </div>
 
-        <button
-          onClick={handleSave}
-          disabled={isSaving || selectedSubjects.length === 0}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition"
-        >
-          {isSaving ? "저장 중..." : "선택 완료"}
-        </button>
+          <div className="p-10">
+            <div className="flex items-center gap-2 mb-8">
+              <BookOpen className="w-5 h-5 text-blue-400" />
+              <h2 className="text-lg font-bold">담당하시는 수업 과목을 선택해주세요</h2>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
+              {availableSubjects.map((sub) => {
+                const isSelected = selectedSubjects.includes(sub);
+                return (
+                  <button
+                    key={sub}
+                    onClick={() => toggleSubject(sub)}
+                    className={`group relative py-4 px-4 rounded-2xl text-sm font-bold transition-all duration-300 border flex flex-col gap-3 min-h-[100px] justify-between text-left ${
+                      isSelected
+                        ? "bg-emerald-600/10 border-emerald-500 text-emerald-300 shadow-[0_0_30px_rgba(16,185,129,0.1)]"
+                        : "bg-slate-900/40 border-slate-800/50 text-slate-500 hover:bg-slate-800/60 hover:border-slate-700 hover:text-slate-300"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className="relative z-10">{sub}</span>
+                      {isSelected ? (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border border-slate-700 group-hover:border-slate-500 transition-colors" />
+                      )}
+                    </div>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${
+                      isSelected ? "text-emerald-500/50" : "text-slate-700"
+                    }`}>
+                      {isSelected ? "Active Workspace" : "Select Subject"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between gap-6 pt-6 border-t border-slate-800/50">
+              <div className="text-slate-500 text-xs">
+                <p>선택하신 과목에 맞추어 성취기준 데이터가</p>
+                <p>워크스페이스에 자동으로 배정됩니다.</p>
+              </div>
+              <button
+                onClick={handleSave}
+                disabled={isSaving || selectedSubjects.length === 0}
+                className="pbst-button-primary min-w-[180px] !py-4 flex items-center justify-center gap-2 disabled:opacity-30 disabled:grayscale transition-all"
+              >
+                {isSaving ? "데이터 준비 중..." : "워크스페이스 시작"}
+                <ChevronRight className={`w-4 h-4 transition-transform ${isSaving ? "animate-ping" : "group-hover:translate-x-1"}`} />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <p className="text-center mt-8 text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">
+          Gyeongun School Curriculum System · Phase 2
+        </p>
       </div>
     </div>
   );

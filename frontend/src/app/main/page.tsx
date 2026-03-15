@@ -9,6 +9,20 @@ import {
   SCORE_DESCRIPTIONS,
   getStudentCount,
 } from "@/data/config";
+import GlobalNav from "@/components/GlobalNav";
+import { 
+  Calendar, 
+  CheckCircle, 
+  Save, 
+  LogOut, 
+  BookOpen, 
+  User, 
+  BarChart3, 
+  ChevronDown, 
+  Info,
+  Clock,
+  Layout
+} from "lucide-react";
 
 type Tab = "assignment" | "assessment";
 
@@ -91,9 +105,9 @@ export default function MainPage() {
     });
   };
 
-  const getScore = (code: string, studentIdx: number): number | undefined => {
+  const getScore = useCallback((code: string, studentIdx: number): number | undefined => {
     return scores[`${code}_${studentIdx}`];
-  };
+  }, [scores]);
 
   // Calculate average for a standard
   const getAverage = (code: string): string => {
@@ -114,10 +128,8 @@ export default function MainPage() {
     setSaving(true);
     setSaveMsg("");
     try {
-      // Build plan data: { "3": ["code1","code2"], "4": ["code3"], ... }
       const plan: Record<string, string[]> = {};
       for (const [code, months] of Object.entries(assignments)) {
-        // Only save standards for current subject
         const std = standards.find((s) => s.code === code);
         if (!std || std.subject !== selectedSubject) continue;
         for (const m of months) {
@@ -134,12 +146,12 @@ export default function MainPage() {
       });
 
       if (res.ok) {
-        setSaveMsg("저장 완료!");
+        setSaveMsg("배정 내역이 성공적으로 저장되었습니다.");
       } else {
-        setSaveMsg("서버 저장 실패 (로컬에는 저장됨)");
+        setSaveMsg("서버 저장 실패 (로컬 보관 중)");
       }
     } catch {
-      setSaveMsg("서버 연결 실패 (로컬에는 저장됨)");
+      setSaveMsg("연결 오류 (로컬 보관 중)");
     }
     setSaving(false);
     setTimeout(() => setSaveMsg(""), 3000);
@@ -169,7 +181,7 @@ export default function MainPage() {
       }
 
       if (assessmentList.length === 0) {
-        setSaveMsg("저장할 평가가 없습니다.");
+        setSaveMsg("저장할 평가 데이터가 없습니다.");
         setSaving(false);
         setTimeout(() => setSaveMsg(""), 3000);
         return;
@@ -182,122 +194,103 @@ export default function MainPage() {
       });
 
       if (res.ok) {
-        setSaveMsg("평가 저장 완료!");
+        setSaveMsg("학생 평가가 저장되었습니다.");
       } else {
-        setSaveMsg("서버 저장 실패 (로컬에는 저장됨)");
+        setSaveMsg("서버 저장 실패 (로컬 보관 중)");
       }
     } catch {
-      setSaveMsg("서버 연결 실패 (로컬에는 저장됨)");
+      setSaveMsg("연결 오류 (로컬 보관 중)");
     }
     setSaving(false);
     setTimeout(() => setSaveMsg(""), 3000);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assignedStandards, studentCount, role, scores]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("gstc_role");
-    localStorage.removeItem("gstc_grade");
-    localStorage.removeItem("gstc_subjects");
-    router.push("/");
-  };
+  }, [assignedStandards, studentCount, role, getScore]);
 
   const scoreColors: Record<number, string> = {
-    0: "bg-slate-600 text-slate-300",
-    1: "bg-yellow-600/80 text-yellow-100",
-    2: "bg-blue-600/80 text-blue-100",
-    3: "bg-emerald-600/80 text-emerald-100",
+    0: "bg-slate-700/50 text-slate-400 border-slate-700",
+    1: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+    2: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    3: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
-      {/* Header */}
-      <header className="bg-slate-800 border-b border-slate-700 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-lg font-bold text-blue-400">GSTC</h1>
-            <span className="text-xs text-slate-500 hidden sm:inline">
-              {role} · {grade}
-            </span>
+    <div className="min-h-screen bg-slate-950 text-white selection:bg-blue-500/30">
+      <GlobalNav />
+      
+      {/* Subject Navigation Bar */}
+      <div className="sticky top-20 z-40 bg-slate-900/60 backdrop-blur-md border-b border-slate-800/50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between overflow-hidden">
+          <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
+            <Layout className="w-5 h-5 text-blue-500 shrink-0" />
+            <div className="flex gap-2">
+              {subjects.map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => setSelectedSubject(sub)}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 border ${
+                    selectedSubject === sub
+                      ? "bg-blue-600/10 border-blue-500 text-white shadow-lg shadow-blue-500/10"
+                      : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
+                  }`}
+                >
+                  {sub}
+                </button>
+              ))}
+            </div>
           </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setActiveTab("assignment")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                activeTab === "assignment"
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              배정
-            </button>
-            <button
-              onClick={() => setActiveTab("assessment")}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                activeTab === "assessment"
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              평가
-            </button>
+          <div className="flex items-center gap-4 shrink-0 pl-6">
+            <div className="flex bg-slate-950/50 p-1 rounded-2xl border border-slate-800">
+              <button
+                onClick={() => setActiveTab("assignment")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                  activeTab === "assignment"
+                    ? "bg-blue-600 text-white shadow-lg"
+                    : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                배정
+              </button>
+              <button
+                onClick={() => setActiveTab("assessment")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                  activeTab === "assessment"
+                    ? "bg-blue-600 text-white shadow-lg"
+                    : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                평가
+              </button>
+            </div>
           </div>
-
-          <button
-            onClick={handleLogout}
-            className="text-xs text-slate-500 hover:text-slate-300 transition"
-          >
-            로그아웃
-          </button>
-        </div>
-      </header>
-
-      {/* Subject selector */}
-      <div className="bg-slate-800/50 border-b border-slate-700/50 px-4 py-2">
-        <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto">
-          {subjects.map((sub) => (
-            <button
-              key={sub}
-              onClick={() => setSelectedSubject(sub)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition ${
-                selectedSubject === sub
-                  ? "bg-slate-700 text-white"
-                  : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              {sub}
-            </button>
-          ))}
-          <span className="ml-auto text-xs text-slate-600 whitespace-nowrap">
-            {filteredStandards.length}개 성취기준
-          </span>
         </div>
       </div>
 
-      {/* Content */}
-      <main className="max-w-7xl mx-auto p-4">
-        {activeTab === "assignment" ? (
-          <AssignmentTab
-            standards={filteredStandards}
-            assignments={assignments}
-            toggleMonth={toggleMonth}
-            onSave={saveAssignments}
-            saving={saving}
-            saveMsg={saveMsg}
-          />
-        ) : (
-          <AssessmentTab
-            standards={assignedStandards}
-            studentCount={studentCount}
-            getScore={getScore}
-            setScore={setScore}
-            getAverage={getAverage}
-            scoreColors={scoreColors}
-            onSave={saveAssessments}
-            saving={saving}
-            saveMsg={saveMsg}
-          />
-        )}
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        <div className="animate-pbst-fade-in">
+          {activeTab === "assignment" ? (
+            <AssignmentTab
+              standards={filteredStandards}
+              assignments={assignments}
+              toggleMonth={toggleMonth}
+              onSave={saveAssignments}
+              saving={saving}
+              saveMsg={saveMsg}
+            />
+          ) : (
+            <AssessmentTab
+              standards={assignedStandards}
+              studentCount={studentCount}
+              getScore={getScore}
+              setScore={setScore}
+              getAverage={getAverage}
+              scoreColors={scoreColors}
+              onSave={saveAssessments}
+              saving={saving}
+              saveMsg={saveMsg}
+            />
+          )}
+        </div>
       </main>
     </div>
   );
@@ -321,94 +314,93 @@ function AssignmentTab({
 }) {
   if (standards.length === 0) {
     return (
-      <div className="text-center py-20 text-slate-500">
-        <p className="text-lg mb-2">해당 학년/과목에 성취기준이 없습니다.</p>
-        <p className="text-sm">다른 과목을 선택해주세요.</p>
+      <div className="flex flex-col items-center justify-center py-40 glass border-dashed">
+        <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-slate-700 mb-6">
+          <BookOpen className="w-10 h-10" />
+        </div>
+        <h3 className="text-xl font-bold mb-2">성취기준 데이터가 없습니다</h3>
+        <p className="text-slate-500">다른 과목을 선택하시거나 관리자에게 문의하세요.</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="space-y-8">
+      <div className="flex items-end justify-between">
         <div>
-          <h2 className="text-lg font-bold">월별 성취기준 배정</h2>
-          <p className="text-xs text-slate-500">
-            각 성취기준을 3~12월에 배정하세요 (최대 4개월)
-          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-4 h-4 text-blue-400" />
+            <span className="pbst-label text-blue-500">Monthly Planning</span>
+          </div>
+          <h2 className="text-3xl font-black">교육과정 월별 배정</h2>
+          <p className="text-slate-500 mt-2">각 성취기준을 가장 적합한 실천 월(최대 4개)에 배정하십시오.</p>
         </div>
-        <div className="flex items-center gap-2">
-          {saveMsg && (
-            <span className="text-xs text-emerald-400">{saveMsg}</span>
-          )}
+        <div className="flex items-center gap-4">
+          {saveMsg && <span className="text-sm font-bold text-emerald-400 animate-pulse">{saveMsg}</span>}
           <button
             onClick={onSave}
             disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-lg transition"
+            className="pbst-button-primary flex items-center gap-2"
           >
-            {saving ? "저장 중..." : "서버에 저장"}
+            {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? "저장 중..." : "배정 내역 저장"}
           </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-700">
-              <th className="text-left py-2 px-2 text-slate-400 font-medium w-24">
-                코드
-              </th>
-              <th className="text-left py-2 px-2 text-slate-400 font-medium min-w-48">
-                성취기준
-              </th>
-              {MONTHS.map((m) => (
-                <th
-                  key={m}
-                  className="py-2 px-1 text-slate-400 font-medium text-center w-10"
-                >
-                  {m}월
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {standards.map((std) => {
-              const assigned = assignments[std.code] || [];
-              return (
-                <tr
-                  key={std.code}
-                  className="border-b border-slate-800 hover:bg-slate-800/50"
-                >
-                  <td className="py-2 px-2 text-xs text-slate-500 font-mono">
-                    {std.code}
-                  </td>
-                  <td className="py-2 px-2">
-                    <div
-                      className="text-slate-300 text-xs leading-relaxed"
-                      title={`활동: ${std.activity}\nA: ${std.levelA}\nB: ${std.levelB}\nC: ${std.levelC}`}
-                    >
-                      {std.content}
-                    </div>
-                  </td>
-                  {MONTHS.map((m) => (
-                    <td key={m} className="py-2 px-1 text-center">
-                      <button
-                        onClick={() => toggleMonth(std.code, m)}
-                        className={`w-7 h-7 rounded-md text-xs font-bold transition ${
-                          assigned.includes(m)
-                            ? "bg-blue-600 text-white"
-                            : "bg-slate-800 text-slate-600 hover:bg-slate-700"
-                        }`}
-                      >
-                        {assigned.includes(m) ? "●" : ""}
-                      </button>
+      <div className="glass-card overflow-hidden border-slate-800/50">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-900/50 border-b border-slate-800/80">
+                <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-500 w-24">Code</th>
+                <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-500">Standard Content</th>
+                {MONTHS.map((m) => (
+                  <th key={m} className="p-6 text-xs font-black uppercase tracking-widest text-slate-500 text-center w-12">{m}M</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/30">
+              {standards.map((std) => {
+                const assigned = assignments[std.code] || [];
+                return (
+                  <tr key={std.code} className="hover:bg-blue-600/[0.02] transition-colors group">
+                    <td className="p-6">
+                      <div className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-400 font-bold">
+                        {std.code}
+                      </div>
                     </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    <td className="p-6">
+                      <div className="space-y-1">
+                        <p className="text-sm font-bold text-slate-200 leading-relaxed">{std.content}</p>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-blue-500/50">{std.activity}</span>
+                        </div>
+                      </div>
+                    </td>
+                    {MONTHS.map((m) => {
+                      const isActive = assigned.includes(m);
+                      return (
+                        <td key={m} className="p-4 text-center">
+                          <button
+                            onClick={() => toggleMonth(std.code, m)}
+                            className={`w-9 h-9 rounded-xl text-xs font-black transition-all duration-300 border flex items-center justify-center ${
+                              isActive
+                                ? "bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-600/20"
+                                : "bg-slate-900/50 border-slate-800 md:opacity-10 group-hover:opacity-100 hover:border-slate-500 text-slate-700 hover:text-slate-300"
+                            }`}
+                          >
+                            {isActive ? m : ""}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -440,149 +432,141 @@ function AssessmentTab({
 
   if (standards.length === 0) {
     return (
-      <div className="text-center py-20 text-slate-500">
-        <p className="text-lg mb-2">배정된 성취기준이 없습니다.</p>
-        <p className="text-sm">
-          배정 탭에서 먼저 성취기준을 월별로 배정해주세요.
-        </p>
+      <div className="flex flex-col items-center justify-center py-40 glass border-dashed">
+        <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center text-slate-700 mb-6">
+          <Calendar className="w-10 h-10" />
+        </div>
+        <h3 className="text-xl font-bold mb-2">배정된 성취기준이 없습니다</h3>
+        <p className="text-slate-500">배정 탭에서 먼저 월별 계획을 수립해주십시오.</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="space-y-8">
+      <div className="flex items-end justify-between">
         <div>
-          <h2 className="text-lg font-bold">성취기준 평가</h2>
-          <p className="text-xs text-slate-500">
-            학생별 0~3점 평가 · 0=미성취, 1=C, 2=B, 3=A
-          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <BarChart3 className="w-4 h-4 text-emerald-400" />
+            <span className="pbst-label text-emerald-500">Student Assessment</span>
+          </div>
+          <h2 className="text-3xl font-black">학생별 교육과정 평가</h2>
+          <p className="text-slate-500 mt-2">학생별 도달 정도를 4단계(0~3)로 평가하여 정량화된 성취도를 기록합니다.</p>
         </div>
-        <div className="flex items-center gap-2">
-          {saveMsg && (
-            <span className="text-xs text-emerald-400">{saveMsg}</span>
-          )}
+        <div className="flex items-center gap-4">
+          {saveMsg && <span className="text-sm font-bold text-emerald-400 animate-pulse">{saveMsg}</span>}
           <button
             onClick={onSave}
             disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-lg transition"
+            className="pbst-button-primary flex items-center gap-2 border-emerald-500/50 shadow-emerald-500/10"
           >
-            {saving ? "저장 중..." : "서버에 저장"}
+            {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? "저장 중..." : "평가 내역 저장"}
           </button>
         </div>
       </div>
 
-      {/* Score legend */}
-      <div className="flex gap-3 mb-4 text-xs">
+      {/* Legend Card */}
+      <div className="glass-card p-6 flex flex-wrap items-center gap-8 border-slate-800/50 bg-slate-900/30">
+        <div className="flex items-center gap-2 text-xs font-black text-slate-500 uppercase tracking-widest mr-4">
+          <Info className="w-4 h-4" />
+          Score Guide
+        </div>
         {[0, 1, 2, 3].map((s) => (
-          <span key={s} className="flex items-center gap-1">
-            <span
-              className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold ${scoreColors[s]}`}
-            >
+          <div key={s} className="flex items-center gap-3">
+             <div className={`w-8 h-8 rounded-xl border flex items-center justify-center font-black text-xs ${scoreColors[s]}`}>
               {s}
-            </span>
-            <span className="text-slate-500">
-              {SCORE_LABELS[s]} - {SCORE_DESCRIPTIONS[s]}
-            </span>
-          </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase text-slate-400">{SCORE_LABELS[s]}</span>
+              <span className="text-[11px] text-slate-500 font-medium">{SCORE_DESCRIPTIONS[s]}</span>
+            </div>
+          </div>
         ))}
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-700">
-              <th className="text-left py-2 px-2 text-slate-400 font-medium w-24">
-                코드
-              </th>
-              <th className="text-left py-2 px-2 text-slate-400 font-medium min-w-40">
-                성취기준
-              </th>
-              {Array.from({ length: studentCount }, (_, i) => (
-                <th
-                  key={i}
-                  className="py-2 px-1 text-slate-400 font-medium text-center w-12"
-                >
-                  학생{i + 1}
-                </th>
-              ))}
-              <th className="py-2 px-2 text-slate-400 font-medium text-center w-12">
-                평균
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {standards.map((std) => (
-              <tr
-                key={std.code}
-                className="border-b border-slate-800 hover:bg-slate-800/50"
-              >
-                <td className="py-2 px-2 text-xs text-slate-500 font-mono">
-                  <button
-                    onClick={() =>
-                      setExpandedCode(
-                        expandedCode === std.code ? null : std.code
-                      )
-                    }
-                    className="hover:text-blue-400 transition text-left"
-                    title="성취수준 보기"
-                  >
-                    {std.code}
-                  </button>
-                </td>
-                <td className="py-2 px-2">
-                  <div className="text-xs text-slate-300 leading-relaxed">
-                    {std.content}
-                  </div>
-                  {expandedCode === std.code && (
-                    <div className="mt-2 text-[11px] space-y-1 bg-slate-800 rounded-lg p-2">
-                      <p className="text-emerald-400">
-                        <strong>A(3점):</strong> {std.levelA}
-                      </p>
-                      <p className="text-blue-400">
-                        <strong>B(2점):</strong> {std.levelB}
-                      </p>
-                      <p className="text-yellow-400">
-                        <strong>C(1점):</strong> {std.levelC}
-                      </p>
-                    </div>
-                  )}
-                </td>
-                {Array.from({ length: studentCount }, (_, i) => {
-                  const currentScore = getScore(std.code, i);
-                  return (
-                    <td key={i} className="py-2 px-1 text-center">
-                      <select
-                        value={currentScore ?? ""}
-                        onChange={(e) =>
-                          setScore(
-                            std.code,
-                            i,
-                            parseInt(e.target.value)
-                          )
-                        }
-                        className={`w-10 h-8 rounded text-xs font-bold text-center cursor-pointer outline-none transition ${
-                          currentScore !== undefined
-                            ? scoreColors[currentScore]
-                            : "bg-slate-800 text-slate-600"
-                        }`}
-                      >
-                        <option value="">-</option>
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                      </select>
-                    </td>
-                  );
-                })}
-                <td className="py-2 px-2 text-center text-xs font-bold text-slate-300">
-                  {getAverage(std.code)}
-                </td>
+      <div className="glass-card overflow-hidden border-slate-800/50">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-900/50 border-b border-slate-800/80">
+                <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-500 w-24">Code</th>
+                <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-500 min-w-[300px]">Standard Content</th>
+                {Array.from({ length: studentCount }, (_, i) => (
+                  <th key={i} className="p-6 text-xs font-black uppercase tracking-widest text-slate-500 text-center w-16">S{i + 1}</th>
+                ))}
+                <th className="p-6 text-xs font-black uppercase tracking-widest text-slate-500 text-center w-20">AVG</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-800/30">
+              {standards.map((std) => (
+                <tr key={std.code} className="hover:bg-blue-600/[0.02] transition-colors group">
+                  <td className="p-6 align-top">
+                    <button
+                      onClick={() => setExpandedCode(expandedCode === std.code ? null : std.code)}
+                      className="group/btn flex items-center gap-2"
+                    >
+                      <div className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-400 font-bold group-hover/btn:border-blue-500 group-hover/btn:text-blue-400 transition-colors">
+                        {std.code}
+                      </div>
+                    </button>
+                  </td>
+                  <td className="p-6 align-top">
+                    <div className="space-y-3">
+                      <p className="text-sm font-bold text-slate-300 leading-relaxed">{std.content}</p>
+                      
+                      {expandedCode === std.code && (
+                        <div className="grid grid-cols-3 gap-3 pt-4 animate-pbst-scale-up">
+                          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/50">
+                            <span className="pbst-label !text-[8px] text-emerald-500 block mb-1">Grade A</span>
+                            <p className="text-[11px] text-slate-400 leading-normal">{std.levelA}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/50">
+                            <span className="pbst-label !text-[8px] text-blue-500 block mb-1">Grade B</span>
+                            <p className="text-[11px] text-slate-400 leading-normal">{std.levelB}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/50">
+                            <span className="pbst-label !text-[8px] text-amber-500 block mb-1">Grade C</span>
+                            <p className="text-[11px] text-slate-400 leading-normal">{std.levelC}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  {Array.from({ length: studentCount }, (_, i) => {
+                    const currentScore = getScore(std.code, i);
+                    return (
+                      <td key={i} className="p-4 align-top text-center">
+                        <select
+                          value={currentScore ?? ""}
+                          onChange={(e) => setScore(std.code, i, parseInt(e.target.value))}
+                          className={`w-12 h-10 rounded-xl text-sm font-black text-center cursor-pointer outline-none transition-all duration-300 border appearance-none ${
+                            currentScore !== undefined
+                              ? scoreColors[currentScore]
+                              : "bg-slate-950/50 border-slate-800 text-slate-600 hover:border-slate-600"
+                          }`}
+                        >
+                          <option value="">-</option>
+                          <option value="0">0</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                        </select>
+                      </td>
+                    );
+                  })}
+                  <td className="p-6 align-top text-center">
+                    <div className="h-10 flex items-center justify-center">
+                      <span className="text-sm font-black text-blue-400 font-mono">
+                        {getAverage(std.code)}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
