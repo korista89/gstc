@@ -243,7 +243,7 @@ export default function DashboardPage() {
                   <GraduationCap className="w-4 h-4" /> 종합 소견: {report.student_name}
                 </h4>
                 <p className="text-lg font-medium text-slate-200 leading-relaxed italic">
-                  "{report.summary}"
+                  &quot;{report.summary}&quot;
                 </p>
               </div>
 
