@@ -36,9 +36,13 @@ export default function MainPage() {
   const router = useRouter();
   const [role, setRole] = useState("");
   const [grade, setGrade] = useState("");
-  const [subjects, setSubjects] = useState<string[]>([]);
+  
+  // Selection State (Subjects OR Classes based on role)
+  const [selectionType, setSelectionType] = useState<"subject" | "class">("subject");
+  const [selections, setSelections] = useState<string[]>([]);
+  const [activeSelection, setActiveSelection] = useState("");
+  
   const [activeTab, setActiveTab] = useState<Tab>("assignment");
-  const [selectedSubject, setSelectedSubject] = useState("");
   const [assignments, setAssignments] = useState<Assignments>({});
   const [scores, setScores] = useState<Scores>({});
   const [saving, setSaving] = useState(false);
@@ -49,16 +53,40 @@ export default function MainPage() {
   useEffect(() => {
     const r = localStorage.getItem("gstc_role");
     const g = localStorage.getItem("gstc_grade");
-    const s = localStorage.getItem("gstc_subjects");
-    if (!r || !g || !s) {
+    if (!r || !g) {
       router.push("/");
       return;
     }
     setRole(r);
     setGrade(g);
-    const parsed = JSON.parse(s) as string[];
-    setSubjects(parsed);
-    if (parsed.length > 0) setSelectedSubject(parsed[0]);
+    
+    // Determine Flow
+    const isSubjectRole = r.includes('전담') || r.includes('교과') || r.includes('교사') || r.includes('상담');
+    const isHomeroom = r.includes('담임') && !r.includes('전공과 교과') && !r.includes('전담') && !r.includes('교과');
+    
+    if (isSubjectRole && !isHomeroom) {
+      setSelectionType("class");
+      const savedClasses = localStorage.getItem("gstc_classes");
+      if (savedClasses) {
+        const parsed = JSON.parse(savedClasses) as string[];
+        setSelections(parsed);
+        if (parsed.length > 0) setActiveSelection(parsed[0]);
+      } else {
+         router.push("/setup");
+         return;
+      }
+    } else {
+      setSelectionType("subject");
+      const savedSubjects = localStorage.getItem("gstc_subjects");
+      if (savedSubjects) {
+        const parsed = JSON.parse(savedSubjects) as string[];
+        setSelections(parsed);
+        if (parsed.length > 0) setActiveSelection(parsed[0]);
+      } else {
+         router.push("/setup");
+         return;
+      }
+    }
 
     // Load saved assignments and scores from localStorage
     const savedAssignments = localStorage.getItem(`gstc_assignments_${r}`);
@@ -69,17 +97,30 @@ export default function MainPage() {
     setLoading(false);
   }, [router]);
 
-  // Get standards for current grade + subject
-  const filteredStandards = standards.filter(
-    (s) => s.grade === grade && s.subject === selectedSubject
-  );
+  // Determine current active grade and subject based on selection type
+  // If Subject Teacher -> activeSelection is the Class (e.g. '초3-1'). 
+  //   In this case, we need to show ALL subjects for that grade, or perhaps specific subjects?
+  //   Wait, if they are a Subject Teacher, they teach a specific subject across multiple classes.
+  //   But the original setup only asked them to pick classes. 
+  //   Let's assume for now a Subject Teacher can see ALL subjects for the selected class grade, or we need to refine this.
+  //   For now, we fetch standards based on the grade of the selected class, and all subjects.
+  const currentGrade = selectionType === "class" ? activeSelection.split('-')[0] : grade;
+  
+  // Get standards for current view
+  const filteredStandards = standards.filter((s) => {
+    if (selectionType === "subject") {
+      return s.grade === currentGrade && s.subject === activeSelection;
+    } else {
+      return s.grade === currentGrade; // Subject teacher sees all subjects for the class, or we'd need another filter for their specific subject.
+    }
+  });
 
   // Get assigned standards for assessment tab
   const assignedStandards = filteredStandards.filter(
     (s) => assignments[s.code] && assignments[s.code].length > 0
   );
 
-  const studentCount = getStudentCount(grade);
+  const studentCount = getStudentCount(currentGrade);
 
   // Toggle month assignment for a standard
   const toggleMonth = (code: string, month: number) => {
@@ -134,7 +175,9 @@ export default function MainPage() {
       const plan: Record<string, string[]> = {};
       for (const [code, months] of Object.entries(assignments)) {
         const std = standards.find((s) => s.code === code);
-        if (!std || std.subject !== selectedSubject) continue;
+        // If subject teacher, activeSelection is the Class, std.subject might be any subject.
+        // If homeroom teacher, activeSelection is the Subject.
+        if (!std || (selectionType === "subject" && std.subject !== activeSelection)) continue;
         for (const m of months) {
           const mStr = String(m);
           if (!plan[mStr]) plan[mStr] = [];
@@ -142,10 +185,17 @@ export default function MainPage() {
         }
       }
 
+      const payload = {
+        role,
+        selection_type: selectionType,
+        selection_value: activeSelection,
+        plan 
+      };
+
       const res = await fetch("/api/v1/curriculum/save-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, subject: selectedSubject, plan }),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
@@ -158,7 +208,7 @@ export default function MainPage() {
     }
     setSaving(false);
     setTimeout(() => setSaveMsg(""), 3000);
-  }, [assignments, role, selectedSubject]);
+  }, [assignments, role, activeSelection, selectionType]);
 
   // Save assessments to backend
   const saveAssessments = useCallback(async () => {
@@ -240,14 +290,14 @@ export default function MainPage() {
           
           <div className={styles.tabGroup} style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '1rem', marginLeft: '0.5rem' }}>
             <Layout size={18} style={{ color: '#64748b', alignSelf: 'center', marginRight: '6px' }} />
-            {subjects.map((sub) => (
+            {selections.map((sel) => (
               <button
-                key={sub}
-                onClick={() => setSelectedSubject(sub)}
-                className={`${styles.tabBtn} ${selectedSubject === sub ? styles.tabActive : ""}`}
+                key={sel}
+                onClick={() => setActiveSelection(sel)}
+                className={`${styles.tabBtn} ${activeSelection === sel ? styles.tabActive : ""}`}
                 style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
               >
-                {sub}
+                {sel}
               </button>
             ))}
           </div>

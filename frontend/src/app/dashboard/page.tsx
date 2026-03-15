@@ -34,84 +34,99 @@ export default function DashboardPage() {
           <p className={styles.subtitle}>{role} 성취기준 관리 현황</p>
         </header>
 
-        {/* Analytics Overview */}
+        {/* Analytics Overview - Emphasizing 539 Standards */}
         <div className={styles.statGrid}>
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <h3 className={styles.cardTitle}>등록 학생</h3>
-              <Users className={styles.icon} />
+              <h3 className={styles.cardTitle}>전체 성취기준 달성도</h3>
+              <CheckCircle2 className={styles.icon} style={{ color: '#10b981' }} />
             </div>
-            <p className={styles.statValue}>24명</p>
+            <p className={styles.statValue}>142<span style={{ fontSize: '1.2rem', color: '#94a3b8' }}>/539</span></p>
             <p className={styles.statDesc}>
-              <span className={styles.trendUp}>↑ 2</span> 지난달 대비
+              <span className={styles.trendUp}>↑ 12</span> 이번 학기 달성
             </p>
           </div>
 
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <h3 className={styles.cardTitle}>성취기준 입력 완료율</h3>
-              <CheckCircle2 className={styles.icon} style={{ color: '#10b981' }} />
+              <h3 className={styles.cardTitle}>내 담당 교육과정 진행률</h3>
+              <Users className={styles.icon} style={{ color: '#3b82f6' }} />
             </div>
-            <p className={styles.statValue}>85%</p>
-            <p className={styles.statDesc}>국어, 수학 완료됨</p>
+            <p className={styles.statValue}>68%</p>
+            <p className={styles.statDesc}>계획 대비 평가 완료 비율</p>
           </div>
 
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <h3 className={styles.cardTitle}>집중 지원 대상</h3>
+              <h3 className={styles.cardTitle}>집중 지원 대상 성취기준</h3>
               <AlertTriangle className={styles.icon} style={{ color: '#f59e0b' }} />
             </div>
-            <p className={styles.statValue}>3명</p>
+            <p className={styles.statValue}>15건</p>
             <p className={styles.statDesc}>
-              <span className={styles.trendDown}>↓ 1</span> 지난달 대비
+              <span className={styles.trendDown}>↓ 3</span> 지난달 대비
             </p>
           </div>
           
           <div className={styles.card}>
             <div className={styles.cardHeader}>
-              <h3 className={styles.cardTitle}>AI 분석 리포트</h3>
+              <h3 className={styles.cardTitle}>12년 교육과정 누적 분석</h3>
               <TrendingUp className={styles.icon} style={{ color: '#6366f1' }} />
             </div>
-            <p className={styles.statValue}>12건</p>
-            <p className={styles.statDesc}>이번 달 생성됨</p>
+            <p className={styles.statValue}>정상 궤도</p>
+            <p className={styles.statDesc}>AI 기반 연계성 분석 완료</p>
           </div>
         </div>
 
         {/* Detailed Sections */}
         <div className={styles.gridResponsive}>
-          {/* Section 1: Recent Progress */}
+          {/* Section 1: 539 Standard Progress Tracker */}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <CheckCircle2 className={styles.icon} />
-              <h2 className={styles.sectionTitle}>최근 진도율 (국어)</h2>
+              <h2 className={styles.sectionTitle}>학급별 539 성취기준 도달 현황</h2>
             </div>
             <div className={styles.tableWrapper}>
               <table className={styles.table}>
                 <thead>
                   <tr>
                     <th>학생명</th>
-                    <th>현재 단원</th>
-                    <th>상태</th>
-                    <th>업데이트</th>
+                    <th>담당 교과/학급 진행률</th>
+                    <th>12년 누적 (539)</th>
+                    <th>최근 평가</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td>김민수</td>
-                    <td>2단원. 읽기 기초</td>
-                    <td><span className={`${styles.badge} ${styles.badgeNormal}`}>진행중</span></td>
+                    <td>
+                      <div style={{ width: '100%', backgroundColor: '#e2e8f0', borderRadius: '4px', height: '8px', overflow: 'hidden' }}>
+                        <div style={{ width: '75%', backgroundColor: '#3b82f6', height: '100%' }}></div>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', display: 'block' }}>75% (진행중)</span>
+                    </td>
+                    <td><span className={`${styles.badge} ${styles.badgeNormal}`}>145 / 539</span></td>
                     <td>2026-03-15</td>
                   </tr>
                   <tr>
                     <td>이서연</td>
-                    <td>3단원. 문장 만들기</td>
-                    <td><span className={`${styles.badge} ${styles.badgeNormal}`}>진행중</span></td>
+                    <td>
+                      <div style={{ width: '100%', backgroundColor: '#e2e8f0', borderRadius: '4px', height: '8px', overflow: 'hidden' }}>
+                        <div style={{ width: '90%', backgroundColor: '#10b981', height: '100%' }}></div>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', display: 'block' }}>90% (우수)</span>
+                    </td>
+                    <td><span className={`${styles.badge} ${styles.badgeNormal}`}>160 / 539</span></td>
                     <td>2026-03-14</td>
                   </tr>
                   <tr>
                     <td>박지호</td>
-                    <td>1단원. 자음과 모음</td>
-                    <td><span className={`${styles.badge} ${styles.badgeAlert}`}>지연됨</span></td>
+                    <td>
+                      <div style={{ width: '100%', backgroundColor: '#e2e8f0', borderRadius: '4px', height: '8px', overflow: 'hidden' }}>
+                        <div style={{ width: '40%', backgroundColor: '#f59e0b', height: '100%' }}></div>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', display: 'block' }}>40% (지원필요)</span>
+                    </td>
+                    <td><span className={`${styles.badge} ${styles.badgeAlert}`}>120 / 539</span></td>
                     <td>2026-03-10</td>
                   </tr>
                 </tbody>
@@ -119,16 +134,24 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Section 2: AI Insights (Placeholder to match PBST style) */}
+          {/* Section 2: AI Insights focused on 12-year goal */}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <TrendingUp className={styles.icon} />
-              <h2 className={styles.sectionTitle}>학급 운영 AI 인사이트</h2>
+              <h2 className={styles.sectionTitle}>12년 로드맵 AI 인사이트</h2>
             </div>
-            <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #e2e8f0', fontSize: '0.9rem', color: '#334155', lineHeight: '1.6' }}>
-              <strong>요약 분석 결과:</strong><br />
-              현재 학급의 전반적인 성취기준 도달률은 안정적인 궤도에 있습니다. 
-              다만 <em>박지호</em> 학생의 기초 국어 성취기준 도달이 다소 지연되고 있으니 개별화된 보충 자료(그림말 등) 활용을 권장합니다.
+            <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', borderRadius: '0.75rem', border: '1px solid #e2e8f0', fontSize: '0.9rem', color: '#334155', lineHeight: '1.6' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontWeight: 700, color: '#0f172a' }}>
+                 <div style={{ padding: '4px 8px', backgroundColor: '#ede9fe', color: '#6d28d9', borderRadius: '4px', fontSize: '0.75rem' }}>AI 분석</div>
+                 <span>경은학교 539 로드맵 (초1 ~ 고3)</span>
+              </div>
+              <p style={{ marginBottom: '1rem' }}>
+                현재 담당하시는 교육과정은 539개의 전체 성취기준 중 약 <strong>18%</strong>를 커버하고 있습니다. 
+                이전 학년도 과정과의 연계성을 분석한 결과, <em>박지호</em> 학생의 기초 국어 성취기준 도달이 다소 지연되고 있습니다.
+              </p>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', backgroundColor: 'white', padding: '0.75rem', borderRadius: '0.5rem', border: '1px dashed #cbd5e1' }}>
+                💡 <strong>AI 제안:</strong> 부족한 성취기준을 보완하기 위해 이번 달 계획에 개별화된 보충 자료(그림말 등) 활동을 1~2회 추가 배정하는 것을 권장합니다.
+              </p>
             </div>
           </div>
         </div>

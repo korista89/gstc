@@ -2,22 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PASSWORD } from "@/data/config";
+import { PASSWORD, ROLES } from "@/data/config";
 import PBSTLogo from "@/components/PBSTLogo";
 import { Lock } from "lucide-react";
 import styles from "./page.module.css";
 
-const ROLES = [
-  "유난초 담임", "유난초 부담임", "유백합 담임", "유백합 부담임",
-  "초1-1 담임", "초1-1 부담임", "초1-2 담임", "초1-2 부담임",
-  "중1-1 담임", "중1-1 부담임", "중1-2 담임", "중1-2 부담임",
-  "고1-1 담임", "고1-1 부담임", "고1-2 담임", "고1-2 부담임",
-  "전공과 담임", "전공과 부담임", "관리자", "진로전담", "기타전담"
-];
-
 export default function LoginPage() {
   const router = useRouter();
-  const [selectedRole, setSelectedRole] = useState<string>("초1-1 담임");
+  const [selectedRole, setSelectedRole] = useState<string>(ROLES[0]);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -41,7 +33,7 @@ export default function LoginPage() {
           <PBSTLogo size={80} />
         </div>
         
-        <h1 className={styles.title}>경은SST</h1>
+        <h1 className={styles.title}>경은GSTC</h1>
         <p className={styles.subtitle}>교사교육과정 성취기준 관리 시스템</p>
 
         <form onSubmit={handleLogin}>

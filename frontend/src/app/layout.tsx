@@ -6,11 +6,11 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "특수학교 교사교육과정 관리 (SST)",
-    template: "%s | 경은SST",
+    default: "특수학교 교사교육과정 관리 (GSTC)",
+    template: "%s | 경은GSTC",
   },
   description: "과목별 월별 성취기준 배정 및 평가 플랫폼",
-  keywords: ["SST", "교사교육과정", "특수교육", "개별화교육", "성취기준"],
+  keywords: ["GSTC", "교사교육과정", "특수교육", "개별화교육", "성취기준"],
 };
 
 export default function RootLayout({

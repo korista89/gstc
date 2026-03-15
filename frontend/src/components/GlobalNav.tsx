@@ -48,7 +48,7 @@ export default function GlobalNav() {
         <Link href="/dashboard" className={styles.logoGroup}>
           <PBSTLogo size={42} />
           <div className={styles.logoText}>
-            <span className={styles.logoTitle}>경은SST</span>
+            <span className={styles.logoTitle}>경은GSTC</span>
             <span className={styles.logoSubtitle}>Teacher Curriculum System</span>
           </div>
         </Link>

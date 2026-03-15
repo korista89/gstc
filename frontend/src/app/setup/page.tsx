@@ -2,27 +2,34 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Check, ChevronRight } from "lucide-react";
+import { BookOpen, Check, ChevronRight, Users } from "lucide-react";
 import PBSTLogo from "@/components/PBSTLogo";
 import styles from "./setup.module.css";
-import { gradeSubjects } from "@/data/config";
+import { gradeSubjects, isHomeroomTeacher, isSubjectTeacher, CLASSES } from "@/data/config";
 
 function extractGrade(role: string): string {
   const m = role.match(/^(초|중|고)(\d)/);
   if (m) return `${m[1]}${m[2]}`;
   if (role.startsWith("유")) return "초1";
-  if (role.startsWith("전")) return "고3";
+  if (role.startsWith("전")) return "전공1";
   if (role.includes("중")) return "중1";
   if (role.includes("고")) return "고1";
-  return "고1";
+  return "초1";
 }
 
 export default function SetupPage() {
   const router = useRouter();
   const [role, setRole] = useState<string | null>(null);
   const [grade, setGrade] = useState("");
+  const [selectionType, setSelectionType] = useState<"subject" | "class">("subject");
+  
+  // For Homeroom Teachers
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
+  
+  // For Subject Teachers
+  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
+  
   const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
@@ -36,42 +43,64 @@ export default function SetupPage() {
     const g = extractGrade(savedRole);
     setGrade(g);
     localStorage.setItem("gstc_grade", g);
-    setAvailableSubjects(gradeSubjects[g] || []);
     
-    const savedSubjects = localStorage.getItem("gstc_subjects");
-    if (savedSubjects) {
-      setSelectedSubjects(JSON.parse(savedSubjects));
+    // Determine Flow Type
+    if (isSubjectTeacher(savedRole) && !isHomeroomTeacher(savedRole)) {
+      setSelectionType("class");
+      const savedClasses = localStorage.getItem("gstc_classes");
+      if (savedClasses) setSelectedClasses(JSON.parse(savedClasses));
+    } else {
+      setSelectionType("subject");
+      setAvailableSubjects(gradeSubjects[g] || []);
+      const savedSubjects = localStorage.getItem("gstc_subjects");
+      if (savedSubjects) setSelectedSubjects(JSON.parse(savedSubjects));
     }
   }, [router]);
 
-  const toggleSubject = (sub: string) => {
-    setSelectedSubjects((prev) => {
-      if (prev.includes(sub)) return prev.filter((s) => s !== sub);
-      if (prev.length >= 5) return prev;
-      return [...prev, sub];
-    });
+  const toggleSelection = (item: string) => {
+    if (selectionType === "subject") {
+      setSelectedSubjects((prev) => {
+        if (prev.includes(item)) return prev.filter((s) => s !== item);
+        if (prev.length >= 5) return prev;
+        return [...prev, item];
+      });
+    } else {
+      setSelectedClasses((prev) => {
+        if (prev.includes(item)) return prev.filter((c) => c !== item);
+        if (prev.length >= 8) return prev; // allow more classes
+        return [...prev, item];
+      });
+    }
   };
 
+  const currentSelections = selectionType === "subject" ? selectedSubjects : selectedClasses;
+  const maxSelections = selectionType === "subject" ? 5 : 8;
+  const selectionName = selectionType === "subject" ? "교과" : "학급";
+  const ICON = selectionType === "subject" ? BookOpen : Users;
+
   const handleSave = async () => {
-    if (selectedSubjects.length === 0) return;
+    if (currentSelections.length === 0) return;
     
     setIsSaving(true);
     try {
-      const res = await fetch("/api/v1/auth/setup-subjects", {
+      if (selectionType === "subject") {
+        localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
+      } else {
+        localStorage.setItem("gstc_classes", JSON.stringify(selectedClasses));
+      }
+      
+      const payload = selectionType === "subject" 
+        ? { role, selected_subjects: selectedSubjects }
+        : { role, selected_classes: selectedClasses };
+
+      await fetch("/api/v1/auth/setup-subjects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, selected_subjects: selectedSubjects }),
+        body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
-        router.push("/dashboard");
-      } else {
-        localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
-        router.push("/dashboard");
-      }
+      router.push("/dashboard");
     } catch {
-      localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
       router.push("/dashboard");
     } finally {
       setIsSaving(false);
@@ -92,29 +121,29 @@ export default function SetupPage() {
           </div>
           <h1 className={styles.title}>환경 설정</h1>
           <p className={styles.subtitle}>
-            <strong>{role}</strong> 과정에서 우선적으로 관리할 교과를 선택합니다.
-            선택한 교과는 대시보드와 관리 화면에 기본으로 표시됩니다.<br/>
-            최대 5개까지 선택 가능합니다.
+            <strong>{role}</strong> 과정에서 우선적으로 관리할 <strong>{selectionName}</strong>를 선택합니다.
+            선택한 {selectionName}는 대시보드와 관리 화면에 기본으로 표시됩니다.<br/>
+            최대 {maxSelections}개까지 선택 가능합니다.
           </p>
         </div>
 
         <div className={styles.alertBox}>
-          <BookOpen className={styles.icon} />
-          최소 1개 이상의 교과를 선택해야 시스템 시작이 가능합니다. ({selectedSubjects.length}/5)
+          <ICON className={styles.icon} />
+          최소 1개 이상의 {selectionName}를 선택해야 시스템 시작이 가능합니다. ({currentSelections.length}/{maxSelections})
         </div>
         
         <div className={styles.actionArea}>
           <div className={styles.subjectGrid}>
-            {availableSubjects.map((subject) => {
-              const isSelected = selectedSubjects.includes(subject);
+            {(selectionType === "subject" ? availableSubjects : CLASSES).map((item) => {
+              const isSelected = currentSelections.includes(item);
               return (
                 <button
-                  key={subject}
-                  onClick={() => toggleSubject(subject)}
+                  key={item}
+                  onClick={() => toggleSelection(item)}
                   className={`${styles.subjectBtn} ${isSelected ? styles.subjectSelected : ''}`}
                 >
                   {isSelected && <Check className={styles.iconCheck} />}
-                  {subject}
+                  {item}
                 </button>
               );
             })}
@@ -122,7 +151,7 @@ export default function SetupPage() {
 
           <button 
             onClick={handleSave} 
-            disabled={selectedSubjects.length === 0 || isSaving}
+            disabled={currentSelections.length === 0 || isSaving}
             className={styles.submitBtn}
           >
             {isSaving ? "설정 저장 중..." : "대시보드 시작하기"}

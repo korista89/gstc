@@ -39,10 +39,46 @@ export const MONTHS = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 export const PASSWORD = 'ges2811';
 
 // 역할 목록
-export const ROLES = ['담임', '부담임', '교담', '기타'] as const;
+export const ROLES = [
+  "유난초 담임", "유난초 부담임", "유백합 담임", "유백합 부담임",
+  "초1-1 담임", "초1-1 부담임", "초1-2 담임", "초1-2 부담임",
+  "초2-1 담임", "초2-1 부담임", "초2-2 담임", "초2-2 부담임",
+  "초3-1 담임", "초3-1 부담임", "초3-2 담임", "초3-2 부담임",
+  "초4-1 담임", "초4-1 부담임", "초4-2 담임", "초4-2 부담임",
+  "초5-1 담임", "초5-1 부담임", "초5-2 담임", "초5-2 부담임",
+  "초6-1 담임", "초6-1 부담임", "초6-2 담임", "초6-2 부담임",
+  "중1-1 담임", "중1-1 부담임", "중1-2 담임", "중1-2 부담임",
+  "중2-1 담임", "중2-1 부담임", "중2-2 담임", "중2-2 부담임",
+  "중3-1 담임", "중3-1 부담임", "중3-2 담임", "중3-2 부담임",
+  "고1-1 담임", "고1-1 부담임", "고1-2 담임", "고1-2 부담임",
+  "고2-1 담임", "고2-1 부담임", "고2-2 담임", "고2-2 부담임",
+  "고3-1 담임", "고3-1 부담임", "고3-2 담임", "고3-2 부담임",
+  "전공과1 담임", "전공과1 부담임", "전공과2 담임", "전공과2 부담임",
+  "초등 전담", "중등 교과", "고등 교과", "전공과 교과", "진로전담", "보건교사", "전문상담", "관리자"
+] as const;
 
-// 학년 목록
-export const GRADES = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'] as const;
+// 학년 목록 (과목 선택을 위한 기존 학년)
+export const GRADES = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3', '전공1', '전공2'] as const;
+
+// 학급 목록 (전담 교사의 화면에 표시될 학급 선택지)
+export const CLASSES = [
+  "유난초", "유백합", 
+  "초1-1", "초1-2", "초2-1", "초2-2", "초3-1", "초3-2", "초4-1", "초4-2", "초5-1", "초5-2", "초6-1", "초6-2",
+  "중1-1", "중1-2", "중2-1", "중2-2", "중3-1", "중3-2",
+  "고1-1", "고1-2", "고2-1", "고2-2", "고3-1", "고3-2",
+  "전공과1", "전공과2"
+] as const;
+
+// Helper: Does this role imply a Homeroom teacher? (They select SUBJECTS)
+export function isHomeroomTeacher(role: string): boolean {
+  if (role.includes('관리자')) return true; // Give admins standard access for now
+  return role.includes('담임') && !role.includes('전공과 교과') && !role.includes('전담') && !role.includes('교과');
+}
+
+// Helper: Does this role imply a Subject teacher? (They select CLASSES)
+export function isSubjectTeacher(role: string): boolean {
+  return role.includes('전담') || role.includes('교과') || role.includes('교사') || role.includes('상담');
+}
 
 // 평가 척도
 export const SCORE_LABELS: Record<number, string> = {
