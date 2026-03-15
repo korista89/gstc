@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 
 export default function SetupPage() {
   const router = useRouter();
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  const subjects = [
+    "국어", "사회", "수학", "과학", "진로와 직업", "체육", "음악", "미술", "보건",
+    "정보통신", "생활영어", "바른 생활", "슬기로운 생활", "즐거운 생활", "창의적 체험활동"
+  ];
 
   const toggleSubject = (sub: string) => {
     setSelectedSubjects(prev => {

@@ -40,6 +40,7 @@ export default function AssessmentPage() {
   useEffect(() => {
     fetchStudents();
     fetchStandards();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSubject]);
 
   useEffect(() => {
