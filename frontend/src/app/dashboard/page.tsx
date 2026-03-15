@@ -23,6 +23,9 @@ interface Student {
 export default function DashboardPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [report, setReport] = useState<any>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -42,6 +45,26 @@ export default function DashboardPage() {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateReport = async () => {
+    setAnalyzing(true);
+    try {
+      // For demo, generate for the first student if available
+      const studentName = students.length > 0 ? students[0].학생이름 : "관리자";
+      const res = await fetch("/api/v1/analytics/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student_name: studentName })
+      });
+      const data = await res.json();
+      setReport(data);
+      setShowModal(true);
+    } catch (e) {
+      alert("분석 보고서 생성 중 오류가 발생했습니다.");
+    } finally {
+      setAnalyzing(false);
     }
   };
 
@@ -66,9 +89,13 @@ export default function DashboardPage() {
             <h1 className="text-5xl font-black tracking-tight text-white mb-2">지능형 교육과정 <span className="gradient-text">대시보드</span></h1>
             <p className="text-slate-400 font-medium text-lg">실시간 학생 데이터 분석 및 AI 기반 맞춤형 진도 관리</p>
           </div>
-          <button className="mt-6 md:mt-0 flex items-center gap-2 px-8 py-4 bg-white text-slate-950 rounded-2xl font-black hover:bg-blue-50 transition-all premium-shadow">
-            AI 분석 보고서 생성
-            <ArrowUpRight className="w-5 h-5" />
+          <button 
+            onClick={generateReport}
+            disabled={analyzing}
+            className="mt-6 md:mt-0 flex items-center gap-2 px-8 py-4 bg-white text-slate-950 rounded-2xl font-black hover:bg-blue-50 transition-all premium-shadow disabled:opacity-50"
+          >
+            {analyzing ? "AI 분석 중..." : "AI 분석 보고서 생성"}
+            <ArrowUpRight className={`w-5 h-5 ${analyzing ? "animate-bounce" : ""}`} />
           </button>
         </section>
 
@@ -185,6 +212,77 @@ export default function DashboardPage() {
           </section>
         </div>
       </main>
+
+      {/* AI Analysis Modal */}
+      {showModal && report && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl" onClick={() => setShowModal(false)} />
+          <div className="glass-container relative z-10 w-full max-w-2xl p-10 md:p-16 border border-white/10 premium-shadow animate-scale-up">
+            <div className="flex justify-between items-start mb-10">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-blue-600 rounded-[24px] flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <TrendingUp className="text-white w-8 h-8" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-black text-white">AI 지능형 분석 결과</h2>
+                  <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-1">Experimental AI Insight</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="w-12 h-12 rounded-2xl bg-slate-900 border border-white/5 flex items-center justify-center hover:bg-slate-800 transition-all"
+              >
+                <AlertCircle className="w-6 h-6 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="space-y-10">
+              <div className="p-8 bg-blue-600/5 rounded-[40px] border border-blue-500/10 backdrop-blur-sm">
+                <h4 className="text-sm font-black text-blue-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4" /> 종합 소견: {report.student_name}
+                </h4>
+                <p className="text-lg font-medium text-slate-200 leading-relaxed italic">
+                  "{report.summary}"
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <h5 className="text-xs font-black text-emerald-500 uppercase tracking-widest">Strengths (우수 영역)</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {report.strengths?.map((s: string) => (
+                      <span key={s} className="px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/10 text-xs font-black">
+                        {s}
+                      </span>
+                    ))}
+                    {(!report.strengths || report.strengths.length === 0) && <p className="text-slate-600 text-xs font-bold">분석 중...</p>}
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <h5 className="text-xs font-black text-rose-500 uppercase tracking-widest">Focus Area (보충 권장)</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {report.needs_improvement?.map((s: string) => (
+                      <span key={s} className="px-4 py-2 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/10 text-xs font-black">
+                        {s}
+                      </span>
+                    ))}
+                    {(!report.needs_improvement || report.needs_improvement.length === 0) && <p className="text-slate-600 text-xs font-bold">균형 있는 발달 중</p>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-8 border-t border-white/5 flex justify-end">
+                <button 
+                  onClick={() => setShowModal(false)}
+                  className="px-10 py-5 bg-white text-slate-950 rounded-2xl font-black hover:bg-blue-50 transition-all"
+                >
+                  확인 및 닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -28,17 +28,26 @@ interface Student {
 
 export default function AssessmentPage() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedStudent, setSelectedStudent] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [selectedSubject, setSelectedSubject] = useState("국어");
   const [standards, setStandards] = useState<Standard[]>([]);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [targetLevel, setTargetLevel] = useState<Record<string, "A" | "B" | "C">>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSynced, setLastSynced] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStudents();
     fetchStandards();
   }, [selectedSubject]);
+
+  useEffect(() => {
+    if (selectedStudent) {
+      // Potentially fetch existing scores for the selected student
+      // For now, just ensure the UI updates correctly
+    }
+  }, [selectedStudent]);
 
   const fetchStudents = async () => {
     try {
@@ -46,7 +55,7 @@ export default function AssessmentPage() {
       const data = await res.json();
       setStudents(data || []);
       if (data.length > 0 && !selectedStudent) {
-        setSelectedStudent(data[0].학생이름);
+        setSelectedStudent(data[0]); // Set the whole student object
       }
     } catch (e) { console.error(e); }
   };
@@ -62,21 +71,34 @@ export default function AssessmentPage() {
   };
 
   const handleScore = async (code: string, score: number) => {
+    if (!selectedStudent) {
+      console.error("No student selected.");
+      return;
+    }
     const level = targetLevel[code] || "A";
     setScores(prev => ({ ...prev, [code]: score }));
-    
+    setSyncing(true);
     try {
       await fetch("/api/v1/assessment/evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          student_name: selectedStudent,
-          code: code,
-          score: score,
-          level: level
+          student_name: selectedStudent.학생이름,
+          evaluations: [
+            {
+              코드: code,
+              점수: score,
+              날짜: new Date().toISOString().split("T")[0]
+            }
+          ]
         })
       });
-    } catch (e) { console.error("평가 저장 실패:", e); }
+      setLastSynced(new Date().toLocaleTimeString());
+    } catch (e) {
+      console.error("평가 저장 실패:", e);
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const handleLevelChange = (code: string, level: "A" | "B" | "C") => {
@@ -104,15 +126,24 @@ export default function AssessmentPage() {
               <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Achievement Tracker</span>
             </div>
             <h1 className="text-5xl font-black tracking-tight text-white mb-2">성취도 <span className="gradient-text">기록기</span></h1>
-            <p className="text-slate-400 font-medium text-lg">학생별 성취기준 도달 정도를 실시간으로 평가하고 관리합니다.</p>
+            <p className="text-slate-400 font-medium text-lg">학생별 성취기준 달성도 평가 및 맞춤형 피드백 기록</p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${syncing ? "bg-blue-500/10 border-blue-500/20 text-blue-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"}`}>
+              <div className={`w-2 h-2 rounded-full ${syncing ? "bg-blue-500 animate-pulse" : "bg-emerald-500"}`} />
+              <span className="text-xs font-black uppercase tracking-widest">
+                {syncing ? "Syncing..." : "Cloud Synced"}
+              </span>
+            </div>
+            {lastSynced && !syncing && <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Last save: {lastSynced}</p>}
           </div>
           
           <div className="flex gap-4 mt-8 md:mt-0">
             <div className="relative">
               <UserCircle2 className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 w-5 h-5 pointer-events-none" />
               <select 
-                value={selectedStudent}
-                onChange={(e) => setSelectedStudent(e.target.value)}
+                value={selectedStudent?.학생이름 || ""}
+                onChange={(e) => setSelectedStudent(students.find(s => s.학생이름 === e.target.value) || null)}
                 className="bg-slate-900 border border-white/10 rounded-2xl pl-12 pr-8 py-4 font-black text-sm text-white focus:border-blue-500 outline-none appearance-none cursor-pointer"
               >
                 {students.map(s => (

@@ -30,8 +30,12 @@ class SubjectSetupRequest(BaseModel):
     role: str
     selected_subjects: List[str]
 
+from app.services.sheets import sheets_service
+
 @router.post("/setup-subjects")
 def setup_subjects(req: SubjectSetupRequest):
-    # In a real app, we'd save this to a User/Teacher profile in Sheets
-    # For now, just acknowledge
-    return {"message": "Subjects saved successfully"}
+    success = sheets_service.save_user_subjects(req.role, req.selected_subjects)
+    if success:
+        return {"message": "Subjects saved successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="데이터 저장 중 오류가 발생했습니다.")

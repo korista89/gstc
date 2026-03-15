@@ -77,8 +77,25 @@ def init_sheets():
     except gspread.WorksheetNotFound:
         print(f"Creating {settings.ASSESSMENT_SHEET_NAME}...")
         ws = sh.add_worksheet(title=settings.ASSESSMENT_SHEET_NAME, rows=5000, cols=10)
-        # 학생이름, 성취기준코드, 평가날짜, 점수(0-3), 성취수준(A/B/C), 비고
         headers = ["학생이름", "성취기준코드", "평가날짜", "점수", "성취수준", "비고"]
+        ws.append_row(headers)
+
+    # 5. Initialize Users
+    try:
+        sh.worksheet("Users")
+    except gspread.WorksheetNotFound:
+        print("Creating Users worksheet...")
+        ws = sh.add_worksheet(title="Users", rows=1000, cols=5)
+        headers = ["Role", "Subjects", "ID", "Name", "Department"]
+        ws.append_row(headers)
+
+    # 6. Initialize Monthly_Plans
+    try:
+        sh.worksheet("Monthly_Plans")
+    except gspread.WorksheetNotFound:
+        print("Creating Monthly_Plans worksheet...")
+        ws = sh.add_worksheet(title="Monthly_Plans", rows=2000, cols=10)
+        headers = ["Role", "Subject", "Month", "Standards", "Comment"]
         ws.append_row(headers)
 
     print("Sheet initialization complete.")

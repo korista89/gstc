@@ -5,12 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function SetupPage() {
   const router = useRouter();
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-
-  const subjects = [
-    "국어", "사회", "수학", "과학", "진로와 직업", "체육", "음악", "미술", "보건",
-    "정보통신", "생활영어", "바른 생활", "슬기로운 생활", "즐거운 생활", "창의적 체험활동"
-  ];
+  const [isSaving, setIsSaving] = useState(false);
 
   const toggleSubject = (sub: string) => {
     setSelectedSubjects(prev => {
@@ -29,7 +24,13 @@ export default function SetupPage() {
       return;
     }
     const role = localStorage.getItem("gstc_role");
+    if (!role) {
+      alert("로그인 정보가 없습니다. 다시 로그인 해주세요.");
+      router.push("/");
+      return;
+    }
     
+    setIsSaving(true);
     try {
       const res = await fetch("/api/v1/auth/setup-subjects", {
         method: "POST",
@@ -40,15 +41,19 @@ export default function SetupPage() {
         })
       });
       
+      const data = await res.json();
+      
       if (res.ok) {
         localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
         router.push("/dashboard");
       } else {
-        alert("과목 저장에 실패했습니다. (서버 오류)");
+        alert(`과목 저장에 실패했습니다: ${data.detail || "서버 오류"}`);
       }
     } catch (e) {
       console.error(e);
-      alert("네트워크 오류가 발생했습니다.");
+      alert("네트워크 오류가 발생했습니다. 인터넷 연결을 확인해 주세요.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -85,10 +90,11 @@ export default function SetupPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <button
             onClick={handleSave}
+            disabled={isSaving}
             className="premium-button"
-            style={{ width: '100%', fontSize: '18px', letterSpacing: '0.1em' }}
+            style={{ width: '100%', fontSize: '18px', letterSpacing: '0.1em', opacity: isSaving ? 0.7 : 1 }}
           >
-            CONFIRM & START
+            {isSaving ? "SAVING..." : "CONFIRM & START"}
           </button>
           <p style={{ textAlign: 'center', color: '#64748b', fontSize: '12px', fontWeight: 500 }}>설제 정보는 언제든지 대시보드에서 수정하실 수 있습니다.</p>
         </div>

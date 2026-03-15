@@ -38,23 +38,86 @@ class SheetsService:
             except Exception as e:
                 print(f"Error loading credentials from env: {e}")
 
-        creds_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), settings.GOOGLE_CREDENTIALS_FILE)
-        if os.path.exists(creds_path):
-            creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
-            self._client = gspread.authorize(creds)
-            return self._client
+        # Try various paths for service_account.json
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        possible_paths = [
+            os.path.join(base_dir, settings.GOOGLE_CREDENTIALS_FILE),
+            os.path.join(os.getcwd(), "backend", settings.GOOGLE_CREDENTIALS_FILE),
+            os.path.join(os.getcwd(), settings.GOOGLE_CREDENTIALS_FILE),
+            settings.GOOGLE_CREDENTIALS_FILE
+        ]
+        
+        for creds_path in possible_paths:
+            if os.path.exists(creds_path):
+                try:
+                    creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
+                    self._client = gspread.authorize(creds)
+                    print(f"Successfully loaded credentials from {creds_path}")
+                    return self._client
+                except Exception as e:
+                    print(f"Failed to load credentials from {creds_path}: {e}")
             
+        print("No service account credentials found!")
         return None
+
+    def safe_get_worksheet(self, sh, name: str):
+        try:
+            return sh.worksheet(name)
+        except Exception as e:
+            print(f"Worksheet {name} not found: {e}")
+            return None
+
+    def safe_append_row(self, ws, row: List[Any]) -> bool:
+        for attempt in range(5):
+            try:
+                ws.append_row(row)
+                return True
+            except Exception as e:
+                wait_time = (2 ** attempt) + 1
+                print(f"Error appending row (attempt {attempt+1}, waiting {wait_time}s): {e}")
+                time.sleep(wait_time)
+        return False
+
+    def safe_append_rows(self, ws, rows: List[List[Any]]) -> bool:
+        for attempt in range(5):
+            try:
+                ws.append_rows(rows)
+                return True
+            except Exception as e:
+                wait_time = (2 ** attempt) + 1
+                print(f"Error appending rows (attempt {attempt+1}, waiting {wait_time}s): {e}")
+                time.sleep(wait_time)
+        return False
+
+    def safe_update_cell(self, ws, row: int, col: int, value: Any) -> bool:
+        for attempt in range(5):
+            try:
+                # Ensure sheet is big enough
+                if ws.row_count < row or ws.col_count < col:
+                    needed_rows = max(row, ws.row_count)
+                    needed_cols = max(col, ws.col_count)
+                    ws.resize(rows=needed_rows, cols=needed_cols)
+                    time.sleep(1) # Wait for resize to propogate
+                
+                ws.update_cell(row, col, value)
+                return True
+            except Exception as e:
+                wait_time = (2 ** attempt) + 1
+                print(f"Error updating cell {row},{col} (attempt {attempt+1}, waiting {wait_time}s): {e}")
+                time.sleep(wait_time)
+        return False
 
     def get_spreadsheet(self):
         client = self.get_client()
         if not client or not settings.SHEET_URL:
             return None
-        try:
-            return client.open_by_url(settings.SHEET_URL)
-        except Exception as e:
-            print(f"Error opening spreadsheet: {e}")
-            return None
+        for attempt in range(3):
+            try:
+                return client.open_by_url(settings.SHEET_URL)
+            except Exception as e:
+                print(f"Error opening spreadsheet (attempt {attempt+1}): {e}")
+                time.sleep(1)
+        return None
 
     def safe_get_all_records(self, ws) -> List[Dict[str, Any]]:
         try:
@@ -123,11 +186,78 @@ class SheetsService:
             print(f"Error saving plan: {e}")
             return False
 
+    def save_user_subjects(self, role: str, subjects: List[str]):
+        try:
+            self._cache.pop("subjects", None) # Invalidate cache
+            sh = self.get_spreadsheet()
+            if not sh: return False
+            
+            clean_role = str(role).strip()
+            
+            try:
+                ws = sh.worksheet("Users")
+            except:
+                ws = sh.add_worksheet(title="Users", rows=100, cols=5)
+                ws.append_row(["Role", "Subjects", "ID", "Name"])
+                time.sleep(1)
+            
+            records = self.safe_get_all_records(ws)
+            headers = ws.row_values(1)
+            
+            # Find the row for this role
+            row_idx = -1
+            for idx, r in enumerate(records):
+                stored_role = str(r.get("Role") or r.get("ID") or "").strip()
+                if stored_role.lower() == clean_role.lower():
+                    row_idx = idx + 2 # +1 for header, +1 for 1-based indexing
+                    break
+            
+            if "Subjects" not in headers:
+                sub_col = len(headers) + 1
+                self.safe_update_cell(ws, 1, sub_col, "Subjects")
+            else:
+                sub_col = headers.index("Subjects") + 1
+
+            if row_idx != -1:
+                return self.safe_update_cell(ws, row_idx, sub_col, ",".join(subjects))
+            else:
+                # Add new row for this role
+                new_row = [clean_role, ",".join(subjects), clean_role, "Unknown"]
+                return self.safe_append_row(ws, new_row)
+                
+            return True
+        except Exception as e:
+            print(f"Error saving user subjects: {e}")
+            return False
+
+    def get_user_subjects(self, role: str) -> List[str]:
+        try:
+            # Check cache first
+            # but for setup flow, we might want to skip cache or have a separate key
+            
+            sh = self.get_spreadsheet()
+            if not sh: return []
+            ws = self.safe_get_worksheet(sh, "Users")
+            if not ws: return []
+            
+            clean_role = str(role).strip().lower()
+            records = self.safe_get_all_records(ws)
+            for r in records:
+                stored_role = str(r.get("Role") or r.get("ID") or "").strip().lower()
+                if stored_role == clean_role:
+                    sub_str = r.get("Subjects", "")
+                    return sub_str.split(",") if sub_str else []
+            return []
+        except Exception as e:
+            print(f"Error fetching user subjects: {e}")
+            return []
+
     def get_curriculum_plan(self, role: str, subject: str) -> Dict[str, List[str]]:
         sh = self.get_spreadsheet()
         if not sh: return {}
         try:
-            ws = sh.worksheet("Monthly_Plans")
+            ws = self.safe_get_worksheet(sh, "Monthly_Plans")
+            if not ws: return {}
             records = self.safe_get_all_records(ws)
             
             plan = {}
@@ -136,17 +266,20 @@ class SheetsService:
                 if r.get("Role") == role and r.get("Subject") == subject and m not in plan:
                     plan[m] = r.get("Standards", "").split(",") if r.get("Standards") else []
             return plan
-        except:
+        except Exception as e:
+            print(f"Error fetching plan: {e}")
             return {}
 
     def fetch_assessments(self, student_name: str) -> List[Dict[str, Any]]:
         sh = self.get_spreadsheet()
         if not sh: return []
         try:
-            ws = sh.worksheet("Assessments")
+            ws = self.safe_get_worksheet(sh, "Assessments")
+            if not ws: return []
             records = self.safe_get_all_records(ws)
             return [r for r in records if r.get("StudentName") == student_name]
-        except:
+        except Exception as e:
+            print(f"Error fetching assessments: {e}")
             return []
 
 sheets_service = SheetsService()
