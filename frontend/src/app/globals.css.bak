@@ -1,4 +1,6 @@
+<<<<<<< Updated upstream
 @import "tailwindcss";
+=======
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap');
 
 :root {
@@ -211,3 +213,4 @@ body {
   .student-list-grid { grid-template-columns: 1fr; }
   .app-container { padding: 100px 20px 40px; }
 }
+>>>>>>> Stashed changes
