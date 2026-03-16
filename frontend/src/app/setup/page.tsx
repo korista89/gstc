@@ -74,24 +74,26 @@ export default function SetupPage() {
   };
 
   const currentSelections = selectionType === "subject" ? selectedSubjects : selectedClasses;
-  const maxSelections = selectionType === "subject" ? 5 : 8;
+  const isAdmin = role?.includes("관리자");
+  const maxSelections = isAdmin ? 1 : (selectionType === "subject" ? 5 : 8);
   const selectionName = selectionType === "subject" ? "교과" : "학급";
   const ICON = selectionType === "subject" ? BookOpen : Users;
 
   const handleSave = async () => {
-    if (currentSelections.length === 0) return;
+    if (!isAdmin && currentSelections.length === 0) return;
     
     setIsSaving(true);
     try {
+      let payload: any;
       if (selectionType === "subject") {
-        localStorage.setItem("gstc_subjects", JSON.stringify(selectedSubjects));
+        const subjectsToSave = isAdmin ? ["전체"] : selectedSubjects;
+        localStorage.setItem("gstc_subjects", JSON.stringify(subjectsToSave));
+        payload = { role, selected_subjects: subjectsToSave };
       } else {
-        localStorage.setItem("gstc_classes", JSON.stringify(selectedClasses));
+        const classesToSave = isAdmin ? ["전체"] : selectedClasses;
+        localStorage.setItem("gstc_classes", JSON.stringify(classesToSave));
+        payload = { role, selected_classes: classesToSave };
       }
-      
-      const payload = selectionType === "subject" 
-        ? { role, selected_subjects: selectedSubjects }
-        : { role, selected_classes: selectedClasses };
 
       await fetch("/api/v1/auth/setup-subjects", {
         method: "POST",
@@ -127,31 +129,35 @@ export default function SetupPage() {
           </p>
         </div>
 
-        <div className={styles.alertBox}>
-          <ICON className={styles.icon} />
-          최소 1개 이상의 {selectionName}를 선택해야 시스템 시작이 가능합니다. ({currentSelections.length}/{maxSelections})
-        </div>
+        {!isAdmin && (
+          <div className={styles.alertBox}>
+            <ICON className={styles.icon} />
+            최소 1개 이상의 {selectionName}를 선택해야 시스템 시작이 가능합니다. ({currentSelections.length}/{maxSelections})
+          </div>
+        )}
         
         <div className={styles.actionArea}>
-          <div className={styles.subjectGrid}>
-            {(selectionType === "subject" ? availableSubjects : CLASSES).map((item) => {
-              const isSelected = currentSelections.includes(item);
-              return (
-                <button
-                  key={item}
-                  onClick={() => toggleSelection(item)}
-                  className={`${styles.subjectBtn} ${isSelected ? styles.subjectSelected : ''}`}
-                >
-                  {isSelected && <Check className={styles.iconCheck} />}
-                  {item}
-                </button>
-              );
-            })}
-          </div>
+          {!isAdmin && (
+            <div className={styles.subjectGrid}>
+              {(selectionType === "subject" ? availableSubjects : CLASSES).map((item) => {
+                const isSelected = currentSelections.includes(item);
+                return (
+                  <button
+                    key={item}
+                    onClick={() => toggleSelection(item)}
+                    className={`${styles.subjectBtn} ${isSelected ? styles.subjectSelected : ''}`}
+                  >
+                    {isSelected && <Check className={styles.iconCheck} />}
+                    {item}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <button 
             onClick={handleSave} 
-            disabled={currentSelections.length === 0 || isSaving}
+            disabled={(!isAdmin && currentSelections.length === 0) || isSaving}
             className={styles.submitBtn}
           >
             {isSaving ? "설정 저장 중..." : "대시보드 시작하기"}

@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Users2,
   Palette,
+  FileText,
   LogOut,
   Bell
 } from "lucide-react";
@@ -17,7 +18,8 @@ import styles from "./GlobalNav.module.css";
 
 const navItems = [
   { name: "대시보드", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Tier 현황", href: "/tier-status", icon: BarChart3 },
+  { name: "전교생성취현황", href: "/all-students-status", icon: BarChart3 },
+  { name: "평가", href: "/evaluation", icon: FileText },
   { name: "CICO 관리", href: "/cico", icon: ClipboardList },
   { name: "교육과정 협의", href: "/meeting", icon: Users2 },
   { name: "경은그림말", href: "/picture-word", icon: Palette },
